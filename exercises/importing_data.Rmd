@@ -1,0 +1,19 @@
+---
+title: "How to get your data into R"
+output: html_notebook
+---
+
+For this exercise, we'll need the following packages:
+- tidyverse
+- R.matlab
+
+Edit the following code-chunk to do load the packages in. Once it's edited, hit the green play button to run the chunk.
+
+```{r load_packages}
+library(tidyverse)
+```
+
+
+## Loading a matlab file
+
+## Loading a csv
