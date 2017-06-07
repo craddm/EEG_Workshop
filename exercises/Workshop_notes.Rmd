@@ -94,7 +94,7 @@ devtools::install_github("craddm/eegUtils")
 
 ## Getting EEG data into R {.tabset .tabset-fade}
 
-.mat files from recent versions of Matlab can be saved in HDF5 format (file format -v7.3 in Matlab terms). Fieldtrip outputs .mat files by default, and EEGLAB .set files are simply .mat files with a different extension. Several packages exist for reading HDF5 files directly in R (h5, rhdf5). In some respects it is simpler, however, to export and import data as text, as importing from .mat files can have some irritating quirks. We'll cover reading from hdf5 and earlier .mat files under the Fieldtrip tab below.
+.mat files from recent versions of Matlab can be saved in HDF5 format (file format -v7.3 in Matlab terms). Fieldtrip outputs .mat files by default, and EEGLAB .set files are simply .mat files with a different extension. Several packages exist for reading HDF5 files directly in R (h5, rhdf5). In most cases, it is simpler, however, to export and import data as text, as importing from .mat files can have some irritating quirks. We'll cover reading from hdf5 and earlier .mat files under the Fieldtrip tab below.
 
 ### From EEGLAB
 
@@ -149,28 +149,49 @@ head(ObjLock)
 
 ### From Fieldtrip/.mat
 
-Fieldtrip files are simply .mat files. Recently exported .mat files in v7.3/HDF5 format need one of the HDF5 R packages - h5 or rhdf5. While h5 is available through CRAN, rhdf5 is available from Bioconductr, another source of R packages. To install from there, you run the following script first (it is *sourced* from a URL.)
-
-```
-source("https://bioconductor.org/biocLite.R")
-biocLite("rhdf5")
-```
-
-
-```{r eval = FALSE}
-
-library(rhdf5)
-h5ls("../data/ObjPresData.mat")
-rm(hmhm)
-```
-
-Older Matlab formats can be accessed using the *R.matlab* package
+Fieldtrip files are simply .mat files. Recently exported .mat files in v7.3/HDF5 format need one of the HDF5 R packages - h5 or rhdf5. While h5 is available through CRAN, rhdf5 is available from Bioconductr, another source of R packages. Unfortunately, however, Fieldtrip uses cell arrays to store data in its data structure, and existing HDF5 tools in R cannot read them correctly. It is simpler to save .mat files in older Matlab formats (e.g. v6), and load them using the *R.matlab* package.
 
 ```{r older_matlab}
 library(R.matlab)
-mmm <- readMat("../data/Subj12ObjAbseFu.mat")
-mmm
+ft_data <- readMat("../data/Subj12ObjPresFu.mat")
+ft_data
 ```
+
+Getting the data into a sensible format is then a matter of examining the structure of the file and extracting the right elements. The imported file is a list of lists, with the information we want all within the **data** list. In this file, Fieldtrip's data was stored in a cell array called trial, with each cell containing one trial of data. Trial is the 4th item in the data list, and is thus accessed using [[4]]. We unlist this so that we are left with a single vector. "times" is  also a list with the timepoints for each trial, accessed with [[6]]. Electrode labels are in the "labels" list, accessed with [[1]]. Unfortunately for us, the data dimensions are not directly given in the file. But we know there are 70 channels (the length of labels), 69 trials (the length of the trial list), and if we were to check the number of unique entries in the time vector, it would be 1024. The simplest thing is to organize the data as a 2x2 matrix, with each electrode as a columns and each rows a single timepoint from a single trial.
+
+```{r extract_from_mat}
+elecs <- unlist(ft_data$data[[1]])
+raw_ft <- unlist(ft_data$data[[4]])
+times <- unlist(ft_data$data[[6]])
+dim(raw_ft) <- c(70, 70656)
+final_ft <- data.frame(cbind(t(raw_ft), times))
+names(final_ft) <- c(elecs, "times")
+head(final_ft)
+
+```
+
+Finally, we'll convert this to long format and use the same trick as in the EEGLAB section to add trial numbers.
+
+```{r ft_to_long}
+final_ft <- final_ft %>%
+  gather(electrode, amplitude, -times) %>%
+  group_by(times) %>%
+  mutate(trial_no = 1:n())
+
+head(final_ft)
+```
+
+Just to prove that this is converting data to the right format, here is a very simple plot showing the ERP at one channel.
+
+```{r simp_ERP}
+final_ft %>%
+  filter(times >= -.1 & times <= .4 & electrode == "Oz") %>%
+  group_by(times) %>%
+  summarise(amplitude = mean(amplitude)) %>%
+  ggplot(aes(x = times, y = amplitude)) + geom_path()
+  
+```
+
 
 ### From MNE-python
 
@@ -187,16 +208,14 @@ head(mne_data)
 
 The data is already in long format, and has separate columns for epoch, time, electrode, amplitude, and experimental condition. Note that the design here was 2 X 2 - trials could have a light, a touch, both light and touch, or no stimulus at all. MNE nests conditions such that each factor is separated by a forward slash. Also coded here is behavioural response (yes or no). We need condition to be split into multiple columns, one for each factor. Again, tidyr has the answer. Using separate() we can split a column into multiple columns.
 
-
 ```{r split_cols}
 mne_data <- separate(mne_data,condition, c("light","touch","report"), sep = "/")
-
 head(mne_data)
 ```
 
-## Getting the data in shape with dplyr
+## Selecting and summarizing relevant data
 
-First up let's load some data. These are some simple ERPs from one electrode for a group of participants and an experiment with two conditions.
+First up let's load some data. These are some simple ERPs from one electrode for a group of participants, for two conditions.
 
 ```{r load_ERPs}
 levCatGA <- read.csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/levCatObjNon.csv",
@@ -216,7 +235,7 @@ levCatGA <- levCatGA %>%
   mutate(Subject = factor(.$Subject)) %>%
   gather(Category, amplitude, -Time, -Subject) 
 
-levCatGA
+head(levCatGA)
 ```
 
 ## Basic timecourse plotting
@@ -273,12 +292,13 @@ stat_test
 test_result <- t.test(amplitude~Category, data = stat_test, paired = TRUE)
 test_result
 ```
-Note that test_result is a list object with individual elements accessed using the $ operator. 
+Note that test_result is a list object with individual elements accessed using the $ operator or [] subsetting. 
 
 ```{r query_object}
 str(test_result)
 test_result$p.value
 test_result$statistic
+test_result[4]
 ```
 
 Helpfully, the output of many stats obejcts can be tidied up and turned into a dataframe using *tidy* from the *broom* package.
@@ -340,7 +360,10 @@ electrodeLocs <- read_delim("https://raw.githubusercontent.com/craddm/ExploringE
                             trim_ws = TRUE)
 ```
 
-## Multivariate pattern analysis
+## Multivariate pattern analysis/machine learning
+
+For machine learning, the most critical package in R is *caret*. It provides an interface
+
 
 ```{r run_ML, cache = TRUE}
 fitControl <- trainControl(method = "cv",
