@@ -11,6 +11,10 @@ Free
 Massive community
 </p>
 
+Packages
+===
+Packages are the way you add features to R. As of today, there are 10754 packages available on the CRAN central repository that cover a huge range of capabilites. Some packages are already installed; we'll download others as we go on.
+
 What you can and can't do
 ===
 
@@ -70,52 +74,46 @@ head(iris)
 5          5.0         3.6          1.4         0.2  setosa
 6          5.4         3.9          1.7         0.4  setosa
 ```
-Converting between wide and long format
-===
-Spread() and gather()
 
-Nested data frames
+dplyr
 ===
 
-How to select data
+Piping %>%
 ===
 
-Plotting
-===
-
-# ggplot2()
-
-Mixed-effects modelling
-===
-
-Frequentist approach
-- Linear mixed-effects models
--- lme4
-
-Bayesian
-- brms/rstanarm/Stan
-
-lme4 syntax
-===
-
-dv ~ fixed_effects + (random_slopes|random_effecta)
-dv ~ iv1 + (1 + iv1|id)
-dv ~ iv1 + iv2 + iv1:iv2 + (iv1 + iv2 + iv1:iv2|id)
-dv ~ iv1*iv2 + (iv1*iv2|id)
-
-Can have multiple random effects
-dv ~ iv1*iv2 + (iv1*iv2|Sub_id) + (iv1*iv2|object)
-
-Mass Univariate Statistics
-===
+```r
+tmp_var <- iris
+tmp_var$
+```
 
 
 ```r
-library(purrr)
+tmp_var <- iris %>%
+  select(Petal.Length) 
 ```
 
-Machine learning
+Converting between wide and long format
 ===
+Most statistics commands in R expect data to be *long* format - one observation per row.
+spread() and gather() allow simple switching between formats.
+tidyr
 
-Caret
+Summarizing data
+===
+1. Group data
+2. Summarise data
 
+
+Nested data frames
+===
+A useful concept from the tidyverse is the nested data frame. A column in a data frame can be a list, and a list can contain data frames. 
+
+
+
+
+
+
+
+```
+Error in nest(iris, -Species) : could not find function "nest"
+```

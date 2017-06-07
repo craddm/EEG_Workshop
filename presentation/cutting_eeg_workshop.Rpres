@@ -11,6 +11,10 @@ Free
 Massive community
 </p>
 
+Packages
+===
+Packages are the way you add features to R. As of today, there are 10754 packages available on the CRAN central repository that cover a huge range of capabilites. Some packages are already installed; we'll download others as we go on.
+
 What you can and can't do
 ===
 
@@ -59,12 +63,47 @@ Data frames
 ```{r data-frames}
 head(iris)
 ```
+
+dplyr
+===
+
+Piping %>%
+===
+```{r new_vars, eval = FALSE}
+tmp_var <- iris
+tmp_var$
+```
+
+```{r piped_code,eval = FALSE}
+
+tmp_var <- iris %>%
+  select(Petal.Length) 
+
+```
+
 Converting between wide and long format
 ===
-Spread() and gather()
+Most statistics commands in R expect data to be *long* format - one observation per row.
+spread() and gather() allow simple switching between formats.
+tidyr
 
+Summarizing data
+===
+1. Group data
+2. Summarise data
+
+```{r}
+
+
+```
 Nested data frames
 ===
+A useful concept from the tidyverse is the nested data frame. A column in a data frame can be a list, and a list can contain data frames. 
+
+```{r}
+nest(iris,-Species)
+```
+
 
 How to select data
 ===
@@ -87,13 +126,13 @@ Bayesian
 lme4 syntax
 ===
 
-dv ~ fixed_effects + (random_slopes|random_effecta)
-dv ~ iv1 + (1 + iv1|id)
-dv ~ iv1 + iv2 + iv1:iv2 + (iv1 + iv2 + iv1:iv2|id)
-dv ~ iv1*iv2 + (iv1*iv2|id)
+* dv ~ fixed_effects + (random_slopes|random_effects)
+* dv ~ iv1 + (1 + iv1|id)
+* dv ~ iv1 + iv2 + iv1:iv2 + (iv1 + iv2 + iv1:iv2|id)
+* dv ~ iv1*iv2 + (iv1*iv2|id)
 
 Can have multiple random effects
-dv ~ iv1*iv2 + (iv1*iv2|Sub_id) + (iv1*iv2|object)
+* dv ~ iv1*iv2 + (iv1*iv2|Sub_id) + (iv1*iv2|object)
 
 Mass Univariate Statistics
 ===

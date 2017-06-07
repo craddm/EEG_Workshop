@@ -1,0 +1,313 @@
+---
+title: "Workshop notes"
+output:
+  html_document:
+    df_print: paged
+    theme: flatly
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## EEG analysis in R
+
+R is among the fastest growing, most popular statistics programming languages. It is open source, free, and enormously extensible through the vast number of freely available packages. To date, it is not very frequently used for EEG analysis, and the small number of dedicated EEG packages that already exist are not well developed. Nevertheless, there are many positive aspects to R that make it a desirable tool to use for EEG analysis.
+
+##  Basic R concepts
+In this workshop, I assume a basic level of programming knowledge but no extensive knowledge of R specifically. Those of you familiar with Matlab or Python will not find anything particularly difficult to grasp. Nevertheless, to begin with, here are a few important basics.
+
+As in most languages, simple mathematical operations work just fine.
+`r 2 + 2`
+
+The output of an operation can be assigned to a variable/object using the <- operator. Note that the equals sign (=) also works, but is not recommended.
+
+```{r assignment_op}
+a <- 2 + 2
+a
+```
+A vector is a variable with multiple values all of the same type (e.g. all integers).
+```{r vector}
+a <- 1:5
+a
+```
+
+The beating heart of R is the *data frame* - a collection of multiple related vectors. Here are the first five rows of a built in example dataset, **iris**
+
+```{r df_example}
+head(iris)
+```
+The data frame can have any number of columns and rows. Each column can be data of any type, so a data frame can have a mixture of different data types - characters, integers, doubles. A special data type in R is the *factor*. A factor is exactly what you'd expect - a variable indicating to which categorical level of a factor the observations in a given row belongs.
+
+Most statistical commands in R operate on data frames or individual vectors.
+
+A simple way to access a single column from a data frame is using the $ operator.
+
+```{r dollar_op}
+iris$Sepal.Length
+```
+
+Data frames (and matrices) can also be accessed using subsetting with square brackets ([row(s) , column]).
+
+## RStudio
+
+[RStudio]("https://www.rstudio.com") is an Integrated Development Environment for R, and is a vast improvement over the one included with R itself. Its features include:
+* Project management
+* Package manager
+* Github integration
+* Autocomplete
+
+## Installing and loading packages
+
+Packages are the way you add features to R. As of today, there are 10754 packages available on the CRAN central repository that cover a huge range of capabilites. Some packages are already installed; we'll download others as we go on. Packages are loaded using *library()*. First let's load *tidyverse*.
+
+```{r load_tidyverse}
+library(tidyverse)
+```
+
+The tidyverse is actually a collection of several packages that include functions for plotting and data manipulation. Many of the things these packages implement are also possible in base R, but are often much more intuitive and simpler through the tidyverse.
+* ggplot2
+  + Advanced plotting functions
+* dplyr
+  + Data manipulation (in the good sense!)
+* purrr
+  + Functional programming and iteration through loops
+  
+We'll be using these packages extensively.
+
+Packages can be installed using the RStudio GUI or from the console or within a script (note: don't do this). For example, to install the *brms* package from CRAN
+
+```
+install.packages("brms")
+```
+
+Some packages are hosted on Github, not CRAN. For example, my EEG package (which is very much in early development and nowhere near ready for prime-time) is hosted on Github. These can be installed using 
+```
+devtools::install_github("craddm/eegUtils")
+```
+
+## Getting EEG data into R {.tabset .tabset-fade}
+
+.mat files from recent versions of Matlab can be saved in HDF5 format (file format -v7.3 in Matlab terms). Fieldtrip outputs .mat files by default, and EEGLAB .set files are simply .mat files with a different extension. Several packages exist for reading HDF5 files directly in R (h5, rhdf5). In some respects it is simpler, however, to export and import data as text, as importing from .mat files can have some irritating quirks.
+
+### From EEGLAB
+
+EEGLAB offers export to text through its GUI and the Matlab command line. Some data is already supplied today, but when producing this yourself, ensure that the data is output transposed such that each column is an electrode, and each row a timepoint. We'll use read_delim from *readr* to load an example file. Note that you can use the "Import Dataset" icon in your RStudio environment to do this.
+
+```{r load_first}
+ObjLockS1two <- read_delim("../data/ObjLockS1two.csv", "\t",
+                           escape_double = FALSE, trim_ws = TRUE)
+head(ObjLockS1two)
+```
+
+Column X1 is the timepoint for each sample. Each column contains the amplitude for each of 64 electrodes. In total, there are 375 trials. Note that several things are missing that we would like. First, the first column does not have a name. Second, there is no epoch indicator. Third, there is nothing to tell us which trial belongs to which condition. 
+
+I will offer dplyr solutions to these issues. Base R solutions are also possible, but I won't go into them here.
+
+```{r fix_up_data}
+ObjLockS1two <- ObjLockS1two %>%
+  rename(times = X1)
+```
+
+
+### From Fieldtrip/.mat
+
+Fieldtrip files are simply .mat files. Recently exported .mat files in v7.3/HDF5 format can be loaded as below.
+
+```{r eval = FALSE}
+source("https://bioconductor.org/biocLite.R")
+biocLite("rhdf5")
+library(rhdf5)
+h5ls("../data/ObjPresData.mat")
+rm(hmhm)
+```
+
+
+```{r older_matlab}
+library(R.matlab)
+mmm <- readMat("../data/Subj12ObjAbseFu.mat")
+mmm
+```
+
+### From MNE-python
+
+MNE-python is the simplest of all. MNE-Python data can easily be turned into a Pandas data frame and saved as either a .csv or *feather* file. .csv is the most platform agnostic. *feather* is a lightweight binary format that enables easy transfer between Python and R, and potentially other languages. Note that it's not recommended for long-term storage - it is still in active development and the file format may change.
+
+```{r from_mne, message = FALSE}
+clean_data <- read_csv('../data/epochs_GAT_clean.csv', progress = FALSE) %>%
+  gather(electrode,amplitude, -condition, -epoch, -time) 
+
+head(clean_data)
+```
+
+
+```{r}
+clean_data <- clean_data %>%
+  spread(electrode,amplitude) %>%
+  separate(condition, c("light","touch","report"), sep = "/")
+
+head(clean_data)
+```
+
+## Getting the data in shape with dplyr
+
+First up let's load some data. These are some simple ERPs from one electrode for a group of participants and an experiment with two conditions.
+
+```{r load_ERPs}
+levCatGA <- read.csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/levCatObjNon.csv",
+                     header = FALSE)
+names(levCatGA) <- c("Object", "Non-Object", "Time", "Subject")
+head(levCatGA)
+```
+
+Let's re-arrange this data so that amplitude is in one column and Category (Object and Non-Object) is in another. We want to have one row be one observation and each column be a variable.
+
+We'll use filter() to select rows within a defined time range. We'll use mutate to change Subject to a factor. Note this could also be done separately in base R, but I like to keep things in the pipe. Finally we'll use gather() to bring the data together.
+
+
+```{r reorganize}
+levCatGA <- levCatGA %>%
+  filter(Time >= -100 & Time <= 400) %>%
+  mutate(Subject = factor(.$Subject)) %>%
+  gather(Category, amplitude, -Time, -Subject) 
+
+levCatGA
+```
+
+## Basic timecourse plotting
+
+```{r basic_ERP_plot}
+levCat.plot <- ggplot(levCatGA,aes(Time,amplitude)) + #set up basic ggplot object
+  scale_color_brewer(palette = "Set1") + #define a simple colour scale
+  theme_classic() #define "theme"
+
+levCat.plot+
+  stat_summary(fun.y = mean, geom = "line", size = 1, aes(colour = Category))+
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (", mu, "V)")), colour = "")+
+  geom_vline(xintercept = 0, linetype = "dashed" )+
+  geom_hline(yintercept = 0, linetype = "dashed")
+```
+
+Note that the plot is built up in *layers*. Each element is plotted in the order it appears in the code, so if you need to ensure something goes in front of something else, it needs to go after it in the code.
+
+Anyway, we can do better than that. How about some 95% confidence intervals?
+
+```{r}
+levCat.plot+
+  stat_summary(fun.data = mean_cl_normal,geom = "ribbon",alpha = 0.2, aes(fill = Category)) +
+  stat_summary(fun.y = mean, geom = "line", size = 1, aes(colour = Category)) +
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (", mu, "V)")), colour = "") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = 0, linetype = "dashed")
+```
+We can even plot individual lines for each subject.
+
+```{r indiv_lines}
+levCat.plot+
+  geom_line(aes(group = interaction(Subject,Category)), alpha = 0.2)+
+  stat_summary(fun.data = mean_cl_normal,geom = "ribbon",alpha = 0.2, aes(fill = Category)) +
+  stat_summary(fun.y = mean, geom = "line", size = 1.5, aes(colour = Category)) +
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (", mu, "V)")), colour = "") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = 0, linetype = "dashed")
+```
+
+## How to run statistics
+
+### Pre-specified windows
+
+In many circumstances, you will have a priori electrodes and time-windows of interest. Suppose that we want to study mean amplitude in the P1 time window (90-110 ms). We can use dplyr::filter() to choose only those rows that meet these critera. We then use group_by() to group the data by subject and category. Finally, we use summarise() to calculate the mean amplitude. This leaves us with a data frame containing mean amplitudes for each subject for each condition. Finally, we'll run a paired t-test on the data, storing the result.
+
+```{r single_test}
+stat_test <- levCatGA %>%
+  filter(Time >= 90 & Time <= 110 & Category != "difference") %>%
+  group_by(Category, Subject) %>%
+  summarise(amplitude = mean(amplitude))
+
+stat_test
+test_result <- t.test(amplitude~Category, data = stat_test, paired = TRUE)
+test_result
+```
+Note that test_result is a list object with individual elements accessed using the $ operator. 
+
+```{r query_object}
+str(test_result)
+test_result$p.value
+test_result$statistic
+```
+
+Helpfully, the output of many stats obejcts can be tidied up and turned into a dataframe using *tidy* from the *broom* package.
+
+```{r}
+broom::tidy(test_result)
+```
+
+
+### Mass univariate tests
+
+Often we want to run a whole series of tests across multiple timepoints, electrodes, frequency bands etc.
+
+Each command in R operates on a single data frame. If we need to run a test on each timepoint, we need to separate dataframes for each timepoint.
+
+The nest() function from tidyr rearranges the data in this way.
+
+```{r}
+time_nest <- nest(levCatGA, -Time)
+time_nest
+```
+
+Why is this useful? This makes it simple iterate through each timepoint using **map** commands from *purrr*. Map command (map, map_dbl, map_df) take a list as input and perform a function on each element of that list. We'll add an extra column to our nested data frame containing the output of the t.test() function applied to each element of the *data* list within the time_nest frame.
+
+```{r}
+time_nest <- mutate(time_nest,
+                    stats = map(data, ~t.test(amplitude~Category, paired = TRUE, data = .x)))
+time_nest
+```
+
+We now have a data frame with the results of the t.test function for each timepoint. Suppose you now want to retrieve the t.test results for a specific timepoint. You can access list elements using double brackets [[]]; you would need to find the right row number for the timepoint you want, and enclose that in the brackets.
+
+```{r}
+time_nest$stats[[10]]
+```
+
+Alternatively, we can use map to iterate through the list and extract, for example, each p-value.
+
+Alternatively, we can use broom::tidy() to convert our statistical test results into a one-line data frame. Then we remove the original data using select() and unnest() to get back a data frame with a column for each element of the statistical test.
+
+```{r levStats}
+levCatGA %>%
+  nest(-Time) %>%
+  mutate(stats = (map(data, ~broom::tidy(t.test(amplitude~Category, paired = TRUE, data = .x))))) %>%
+  select(-data) %>%
+  unnest()
+```
+
+## Topography plotting
+
+
+## Multivariate pattern analysis
+
+```{r run_ML, cache = TRUE}
+fitControl <- trainControl(method = "cv",
+                           number = 5
+                           )
+
+z <- clean_data %>%
+  select(-touch,-report,-epoch) %>%
+  nest(-time) %>%
+  mutate(fit = map(data, ~train(light ~ ., data = .x, preProcess = "scale",
+                                method = "glmnet", family = "binomial", trControl = fitControl)))
+```
+
+```{r plot_ml}
+data.frame(Accuracy = map(z$fit,"resample") %>%
+                   map("Accuracy") %>%
+                   map_dbl(~mean(.x)), time = z$time) %>%
+  ggplot(aes(time, Accuracy))+ geom_line() + theme_classic()
+```
