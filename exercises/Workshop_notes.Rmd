@@ -16,7 +16,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## EEG analysis in R
+# EEG analysis in R
 
 R is among the fastest growing, most popular statistics programming languages. It is open source, free, and enormously extensible through the vast number of freely available packages. To date, it is not very frequently used for EEG analysis, and the small number of dedicated EEG packages that already exist are not well developed. Nevertheless, there are many positive aspects to R that make it a desirable tool to use for EEG analysis.
 
@@ -164,7 +164,6 @@ dim(raw_ft) <- c(70, 70656)
 final_ft <- data.frame(cbind(t(raw_ft), times))
 names(final_ft) <- c(elecs, "times")
 head(final_ft)
-
 ```
 
 Finally, we'll convert this to long format and use the same trick as in the EEGLAB section to add trial numbers.
@@ -186,7 +185,6 @@ final_ft %>%
   group_by(times) %>%
   summarise(amplitude = mean(amplitude)) %>%
   ggplot(aes(x = times, y = amplitude)) + geom_path()
-  
 ```
 
 
@@ -273,7 +271,7 @@ levCat.plot+
   geom_hline(yintercept = 0, linetype = "dashed")
 ```
 
-## How to run statistics
+## How to run group statistics
 
 ### Pre-specified windows
 
@@ -304,7 +302,6 @@ Helpfully, the output of many stats obejcts can be tidied up and turned into a d
 broom::tidy(test_result)
 ```
 
-
 ### Mass univariate tests
 
 Often we want to run a whole series of tests across multiple timepoints, electrodes, frequency bands etc.
@@ -315,26 +312,26 @@ The nest() function from tidyr rearranges the data in this way.
 
 ```{r}
 time_nest <- nest(levCatGA, -Time)
-time_nest
+head(time_nest)
 ```
 
 Why is this useful? This makes it simple iterate through each timepoint using **map** commands from *purrr*. Map command (map, map_dbl, map_df) take a list as input and perform a function on each element of that list. We'll add an extra column to our nested data frame containing the output of the t.test() function applied to each element of the *data* list within the time_nest frame.
 
-```{r}
+```{r run_t_tests}
 time_nest <- mutate(time_nest,
                     stats = map(data, ~t.test(amplitude ~ Category,
                                               paired = TRUE, data = .x)))
-time_nest
+head(time_nest)
 ```
 
 We now have a data frame with the results of the t.test function for each timepoint. Suppose you now want to retrieve the t.test results for a specific timepoint. You can access list elements using double brackets [[]]; you would need to find the right row number for the timepoint you want, and enclose that in the brackets.
 
-```{r}
+```{r query_nest}
 time_nest$stats[[10]]
 ```
 
 Alternatively, we can use map to iterate through the list and extract, for example, each p-value.
-```{r}
+```{r get_pvals}
 time_nest %>% 
   mutate(pvals = map_dbl(stats, "p.value"))
 ```
@@ -372,7 +369,6 @@ ggplot(chan_locs_biosemiLE,
   geom_text()+
   theme_bw()+
   coord_equal()
-
 ```
 
 Here are some other electrode co-ordinates from a standard Biosemi 64 layout.
@@ -397,10 +393,6 @@ ggplot(electrodeLocs, aes(x, y, label = electrode))+
   theme_bw()+
   coord_equal()
 ```
-
-
-
-
 
 Let's add a simple headshape to our plot.
 
@@ -476,7 +468,6 @@ library(eegUtils)
 allData %>%
   rename(time = Times) %>%
   topoplot(allData, timepoint = 250, clim = c(-2,2))
-
 ```
 
 
@@ -514,7 +505,6 @@ trainControl() is used to pass various parameters that influence how the classif
 We'll take advantage of nest() to arrange the data into a collection of separate dataframes for each timepoint and then map() to create a classifier for each timepoint.
 
 ```{r run_ML, cache = TRUE, message = FALSE, warning = FALSE}
-
 fitControl <- trainControl(method = "cv",
                            number = 5)
 
