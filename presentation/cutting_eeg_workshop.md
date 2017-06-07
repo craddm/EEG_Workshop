@@ -56,9 +56,8 @@ Set of integrated packages
 - purr
 - pipes
 
-
 Data frames
-========================================================
+===
 
 
 ```r
@@ -75,11 +74,10 @@ head(iris)
 6          5.4         3.9          1.7         0.4  setosa
 ```
 
-dplyr
-===
-
 Piping %>%
 ===
+Allows code to be read from left-to-right
+
 
 ```r
 tmp_var <- iris
@@ -94,7 +92,7 @@ tmp_var <- iris %>%
 
 Converting between wide and long format
 ===
-Most statistics commands in R expect data to be *long* format - one observation per row.
+Many statistics commands in R expect data to be *long* format - one observation per row.
 spread() and gather() allow simple switching between formats.
 tidyr
 

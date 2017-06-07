@@ -1,0 +1,51 @@
+---
+title: "ERP plotting exercise"
+output: html_notebook
+---
+
+In this exercise, you'll practice loading some files that have already been processed, creating summary statistics, and running simple statistical tests.
+
+You'll need the following packages: 
+* tidyverse
+
+We'll be using the following commands
+* read_csv (or "Import Dataset")
+* gather()
+* %>%
+* separate()
+
+```{r}
+library(tidyverse)
+```
+
+Import the data from the pre-prepared .csv.
+
+```{r}
+ObjFreqERPs <- read_csv("../data/ObjFreqERPs.csv")
+```
+
+```{r}
+glimpse(ObjFreqERPs)
+```
+
+The data is currently in long format. Use gather() to create two new columns - "condition" and "amplitude", keeping the columns "Time" and "Subject".
+
+```{r}
+ObjFreqERPs %>%
+  gather(condition, amplitude, -Subject, -Time)
+```
+
+The data is now in long, tidy format: each column is one variable, each row is one observation. However, we need to split "condition" into two variables, one for each factor. Remember that this is a 2 x 2 design. Use the separate() command.
+
+```{r}
+final_df <- ObjFreqERPs %>%
+  gather(condition, amplitude, -Subject, -Time) %>%
+  separate(condition, into = c("Object", "Frequency"), sep = "/")
+head(final_df)
+```
+
+Save the new dataframe.
+
+```{r}
+save(final_df, file = '../user_data/final_df.RData')
+```
