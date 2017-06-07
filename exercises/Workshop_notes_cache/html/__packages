@@ -12,3 +12,5 @@ caret
 Matrix
 foreach
 glmnet
+scales
+eegUtils
