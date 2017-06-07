@@ -81,53 +81,74 @@ The tidyverse is actually a collection of several packages that include function
   
 We'll be using these packages extensively.
 
-Packages can be installed using the RStudio GUI or from the console or within a script (note: don't do this). For example, to install the *brms* package from CRAN
+Packages can be installed using the RStudio GUI or from the console or within a script (note: don't do this). For example, to install the *brms* package from CRAN:
 
 ```
 install.packages("brms")
 ```
 
-Some packages are hosted on Github, not CRAN. For example, my EEG package (which is very much in early development and nowhere near ready for prime-time) is hosted on Github. These can be installed using 
+Some packages are hosted on Github, not CRAN. For example, my EEG package (which is very much in early development and nowhere near ready for prime-time) is hosted on Github. These can be installed using install_github() from the *devtools* package.
 ```
 devtools::install_github("craddm/eegUtils")
 ```
 
 ## Getting EEG data into R {.tabset .tabset-fade}
 
-.mat files from recent versions of Matlab can be saved in HDF5 format (file format -v7.3 in Matlab terms). Fieldtrip outputs .mat files by default, and EEGLAB .set files are simply .mat files with a different extension. Several packages exist for reading HDF5 files directly in R (h5, rhdf5). In some respects it is simpler, however, to export and import data as text, as importing from .mat files can have some irritating quirks.
+.mat files from recent versions of Matlab can be saved in HDF5 format (file format -v7.3 in Matlab terms). Fieldtrip outputs .mat files by default, and EEGLAB .set files are simply .mat files with a different extension. Several packages exist for reading HDF5 files directly in R (h5, rhdf5). In some respects it is simpler, however, to export and import data as text, as importing from .mat files can have some irritating quirks. We'll cover reading from hdf5 and earlier .mat files under the Fieldtrip tab below.
 
 ### From EEGLAB
 
-EEGLAB offers export to text through its GUI and the Matlab command line. Some data is already supplied today, but when producing this yourself, ensure that the data is output transposed such that each column is an electrode, and each row a timepoint. We'll use read_delim from *readr* to load an example file. Note that you can use the "Import Dataset" icon in your RStudio environment to do this.
+EEGLAB offers export to text through its GUI and the Matlab command line. Some data is already supplied today, but when producing this yourself, ensure that the data is output transposed such that each column is an electrode, and each row a timepoint. We'll use read_delim from *readr* to load an example file. Note that you can use the "Import Dataset" icon in your RStudio environment to do this. Note that you may get a bunch of warning messages when doing this - they can be safely ignored.
 
-```{r load_first}
-ObjLockS1two <- read_delim("../data/ObjLockS1two.csv", "\t",
+```{r load_first, warning = FALSE}
+ObjLock <- read_delim("../data/ObjLockS1two.csv", "\t",
                            escape_double = FALSE, trim_ws = TRUE)
-head(ObjLockS1two)
+head(ObjLock)
 ```
 
-Column X1 is the timepoint for each sample. Each column contains the amplitude for each of 64 electrodes. In total, there are 375 trials. Note that several things are missing that we would like. First, the first column does not have a name. Second, there is no epoch indicator. Third, there is nothing to tell us which trial belongs to which condition. 
+Column X1 is the timepoint for each sample. Each column contains the amplitude for each of 64 electrodes. In total, there are 375 trials. There is an extra, blank column, that is something to do with how readr interprets the CSV output by EEGLAB. Note that several things are missing that we would like. First, the first column does not have a name. Second, there is no epoch indicator. Third, there is nothing to tell us which trial belongs to which condition. 
 
-I will offer dplyr solutions to these issues. Base R solutions are also possible, but I won't go into them here.
+The first two issues can be dealt with easily - I'll offer some dplyr solutions. Base R solutions are also possible, but I won't go into them here. Columns can be renamed using rename() (e.g. rename(new_name = old_name, new_name2 = old_name2,...)). Columns we don't want can be dropped using select(). We do not necessarily know exactly how many trials we have, but that can easily be figured out. We know that each trial contains only one of each timepoint, and each row in the dataframe is one timepoint from one trial. If we group the dataframe by time, we essentially split it into separate dataframes for each timepoint, with each row then coming from consecutive trials. We can then simply label each row appropriately. We use group_by() to group by time, and then mutate to add a new column for trial number. Within mutate, we use n(), a command which counts the number of rows in each group.
 
 ```{r fix_up_data}
-ObjLockS1two <- ObjLockS1two %>%
-  rename(times = X1)
+ObjLock <- ObjLock %>%
+  rename(times = X1) %>%
+  select(-X66) %>%
+  group_by(times) %>%
+  mutate(trial_no = 1:n())
+
+head(ObjLock)
 ```
+
+Finally, for many purposes we'll want the data to be in long, tidy format rather than wide format. We'll use tidyr::gather(). 
+
+```{r}
+ObjLock <- ObjLock %>%
+  gather(electrode, amplitude, -times, -trial_no)
+
+head(ObjLock)
+```
+
 
 
 ### From Fieldtrip/.mat
 
-Fieldtrip files are simply .mat files. Recently exported .mat files in v7.3/HDF5 format can be loaded as below.
+Fieldtrip files are simply .mat files. Recently exported .mat files in v7.3/HDF5 format need one of the HDF5 R packages - h5 or rhdf5. While h5 is available through CRAN, rhdf5 is available from Bioconductr, another source of R packages. To install from there, you run the following script first (it is *sourced* from a URL.)
 
-```{r eval = FALSE}
+```
 source("https://bioconductor.org/biocLite.R")
 biocLite("rhdf5")
+```
+
+
+```{r eval = FALSE}
+
 library(rhdf5)
 h5ls("../data/ObjPresData.mat")
 rm(hmhm)
 ```
 
+Older Matlab formats can be accessed using the *R.matlab* package
 
 ```{r older_matlab}
 library(R.matlab)
@@ -290,6 +311,16 @@ levCatGA %>%
 
 ## Topography plotting
 
+```{r}
+topotest <- read_csv("https://raw.githubusercontent.com/craddm/ExploringERPs/master/topographyTest.csv") %>%
+  gather(electrode, amplitude, -Times)
+topotest$amplitude <- as.double(topotest$amplitude)
+electrodeLocs <- read_delim("https://raw.githubusercontent.com/craddm/ExploringERPs/master/biosemi70elecs.loc",
+                            "\t",
+                            escape_double = FALSE,
+                            col_names = c("chanNo","theta","radius","electrode"),
+                            trim_ws = TRUE)
+```
 
 ## Multivariate pattern analysis
 
