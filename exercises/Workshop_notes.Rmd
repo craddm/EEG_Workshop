@@ -122,13 +122,29 @@ head(ObjLock)
 
 Finally, for many purposes we'll want the data to be in long, tidy format rather than wide format. We'll use tidyr::gather(). 
 
-```{r}
+```{r gather_obj}
 ObjLock <- ObjLock %>%
   gather(electrode, amplitude, -times, -trial_no)
 
 head(ObjLock)
+
 ```
 
+Note that you could easily combine all of these steps into a single chain of commands.
+
+
+```{r combi,warning= FALSE}
+ObjLock <- read_delim("../data/ObjLockS1two.csv", "\t",
+                           escape_double = FALSE, trim_ws = TRUE) %>%
+  rename(times = X1) %>%
+  select(-X66) %>%
+  group_by(times) %>%
+  mutate(trial_no = 1:n()) %>%
+  gather(electrode, amplitude, -times, -trial_no)
+
+head(ObjLock)
+
+```
 
 
 ### From Fieldtrip/.mat
@@ -158,22 +174,24 @@ mmm
 
 ### From MNE-python
 
-MNE-python is the simplest of all. MNE-Python data can easily be turned into a Pandas data frame and saved as either a .csv or *feather* file. .csv is the most platform agnostic. *feather* is a lightweight binary format that enables easy transfer between Python and R, and potentially other languages. Note that it's not recommended for long-term storage - it is still in active development and the file format may change.
+MNE-python is the simplest of all. MNE-Python data can easily be turned into a Pandas data frame and saved as either a .csv or *feather* file. A Pandas data frame is already very close to the ideal format for use in R, and should already contain most of the information we need.
+
+.csv is the most platform agnostic. *feather* is a lightweight binary format that enables easy transfer between Python and R, and potentially other languages. Note that it's not recommended for long-term storage - it is still in active development and the file format may change. Essentially, once the data is in it should be no different whether it was from a CSV or a feather file.
 
 ```{r from_mne, message = FALSE}
-clean_data <- read_csv('../data/epochs_GAT_clean.csv', progress = FALSE) %>%
+mne_data <- read_csv('../data/mne_data.csv', progress = FALSE) %>%
   gather(electrode,amplitude, -condition, -epoch, -time) 
 
-head(clean_data)
+head(mne_data)
 ```
 
+The data is already in long format, and has separate columns for epoch, time, electrode, amplitude, and experimental condition. Note that the design here was 2 X 2 - trials could have a light, a touch, both light and touch, or no stimulus at all. MNE nests conditions such that each factor is separated by a forward slash. Also coded here is behavioural response (yes or no). We need condition to be split into multiple columns, one for each factor. Again, tidyr has the answer. Using separate() we can split a column into multiple columns.
 
-```{r}
-clean_data <- clean_data %>%
-  spread(electrode,amplitude) %>%
-  separate(condition, c("light","touch","report"), sep = "/")
 
-head(clean_data)
+```{r split_cols}
+mne_data <- separate(mne_data,condition, c("light","touch","report"), sep = "/")
+
+head(mne_data)
 ```
 
 ## Getting the data in shape with dplyr
