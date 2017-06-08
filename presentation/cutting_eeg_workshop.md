@@ -6,10 +6,9 @@ autosize: true
 
 About R
 ===
-<p>
-Free
-Massive community
-</p>
+
+1. Free, open source
+2. Massive community
 
 Packages
 ===
@@ -56,6 +55,11 @@ Set of integrated packages
 - purr
 - pipes
 
+
+```r
+library(tidyverse)
+```
+
 Data frames
 ===
 
@@ -73,6 +77,21 @@ head(iris)
 5          5.0         3.6          1.4         0.2  setosa
 6          5.4         3.9          1.7         0.4  setosa
 ```
+
+Functions
+===
+
+```
+mean_fun <- function(x, arg1, arg2, ...) <- {
+  mean(x)
+}
+```
+
+Get help on any function using ?function_name.
+
+ggplot2
+===
+![plot of chunk unnamed-chunk-2](cutting_eeg_workshop-figure/unnamed-chunk-2-1.png)
 
 Piping %>%
 ===
@@ -107,11 +126,54 @@ Nested data frames
 A useful concept from the tidyverse is the nested data frame. A column in a data frame can be a list, and a list can contain data frames. 
 
 
-
-
-
-
+```r
+nest(iris,-Species)
+```
 
 ```
-Error in nest(iris, -Species) : could not find function "nest"
+# A tibble: 3 x 2
+     Species              data
+      <fctr>            <list>
+1     setosa <tibble [50 x 4]>
+2 versicolor <tibble [50 x 4]>
+3  virginica <tibble [50 x 4]>
 ```
+
+
+How to select data
+===
+
+Mixed-effects modelling
+===
+
+Frequentist approach
+- Linear mixed-effects models
+-- lme4
+
+Bayesian
+- brms/rstanarm/Stan
+
+lme4 syntax
+===
+
+* dv ~ fixed_effects + (random_slopes|random_effects)
+* dv ~ iv1 + (1 + iv1|id)
+* dv ~ iv1 + iv2 + iv1:iv2 + (iv1 + iv2 + iv1:iv2|id)
+* dv ~ iv1*iv2 + (iv1*iv2|id)
+
+Can have multiple random effects
+* dv ~ iv1*iv2 + (iv1*iv2|Sub_id) + (iv1*iv2|object)
+
+Mass Univariate Statistics
+===
+
+
+```r
+library(purrr)
+```
+
+Machine learning
+===
+
+Caret
+

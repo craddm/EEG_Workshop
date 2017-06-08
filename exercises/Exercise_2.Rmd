@@ -1,8 +1,9 @@
 ---
-title: "An intro to ggplot2 through ERPs"
+title: "How to run standard statistics"
 output: html_notebook
 ---
 
+## How to run statistics
 In the first exercise, we created a set of ERPs. Now we'll practice some ggplot2 skills using the dataframe we created.
 
 Clear your workspace (press the broom icon in the upper right pane) and load the file you saved.
@@ -14,62 +15,5 @@ library(tidyverse)
 
 load('../user_data/final_df.RData')
 head(final_df)
-```
-
-Create a basic ERP plot using ggplot2. The basic plot object is created using ggplot(). Think of the plot as being in layers added to this object. Each layer is added with + followed by a drawing command such as stat_summary(). Some commands will create summary statistics for you, whereas others require you to give them the summarized statistic. The specific shapes that are added to plots are called **geoms**. These can be lines (geom_line). Within a command such as stat_summary, the geom can be specified as geom = "line".
-
-```{r basic_plot, fig.height = 4}
-ggplot(final_df, aes(x = Time, y = amplitude)) +
-  stat_summary(geom = "line")
-```
-
-The grey background provided by default is probably not to your taste. The overall look of a ggplot can be defined using a theme. I have included here the code to set the theme globally to one of the ggplot defaults, theme_classic(). Other themes include theme_bw() and theme_minimal(). You can add these to any plot object in the same way as you would any other layer/geom.
-
-```{r}
-theme_set(theme_classic())
-```
-
-Next, add separate lines for the two Object conditions. To do this, we need to specify something so that ggplot knows how to differentiate them. For example, the lines can simply be grouped together with group = var; they can be different colours (colour = var); or they can use different linetypes (e.g. dashed versus solid; linetype = var). Within the initial ggplot(aes()) call, set the linetype to be defined by the Object variable.
-
-```{r obj_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, linetype = Object)) +
-  stat_summary(fun.y = mean, geom = "line")
-```
-
-Next, add an additional grouping factor (e.g. colour) for the Frequency variable. This must be different from the previous one.
-
-```{r objXfreq_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, linetype = Object)) +
-  stat_summary(fun.y = mean, geom = "line")
-```
-
-Next, we want to add confidence intervals around the mean ERPs. To plot these as bands around the ERP, we need to use a ribbon geom. Ribbon geoms draw a filled area; to set the colour of that area, add fill to your aes call. Use the same Think about layering: for visibility, these should be plotted beneath the mean ERP lines. In addition, transparency can be set using the alpha parameter. This should be added to individual drawing element (i.e. within stat_summary()). Try setting this for the ribbon. 
-
-Within a given stat_summary() call you can also override settings from the ggplot(aes()) call. Try removing the lines on the edge of the ribbon geom by setting colour = NA. Alternatively, try removing the fill and leaving only the edges.
-
-```{r CIs_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, linetype = Object, fill = Frequency)) +
-  stat_summary(geom = "ribbon", alpha = 0.2, colour = NA)+
-  stat_summary(geom = "line")
-```
-
-You'll probably notice this is now getting hard to split the conditions. A nice way around this is to use facet_wrap() or facet_grid(). These commands split the plot into separate plots for each level of a factor or multiple factors. Try adding facet_wrap(~Object) to the code you used above. Note that here you would no longer need to define separate linetypes for object, since it will be plotted in separate graphs anyway.
-
-
-```{r facet_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +
-  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2, colour = NA)+
-  stat_summary(fun.y = mean, geom = "line") + facet_wrap(~Object)
-```
-
-Finally, to round off your plots you may want to add a horizontal line at 0 microvolts and a vertical line at 0 ms.
-
-```{r}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +
-  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2, colour = NA)+
-  stat_summary(fun.y = mean, geom = "line") + facet_wrap(~Object) +
-  geom_vline(xintercept = 0, linetype = "dashed") + 
-  geom_hline(yintercept = 0, linetype = "dashed")
-
 ```
 

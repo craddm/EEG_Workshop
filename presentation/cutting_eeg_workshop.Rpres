@@ -6,10 +6,9 @@ autosize: true
 
 About R
 ===
-<p>
-Free
-Massive community
-</p>
+
+1. Free, open source
+2. Massive community
 
 Packages
 ===
@@ -56,11 +55,39 @@ Set of integrated packages
 - purr
 - pipes
 
+```{r}
+library(tidyverse)
+```
+
 Data frames
 ===
 
 ```{r data-frames}
 head(iris)
+```
+
+Functions
+===
+
+```
+mean_fun <- function(x, arg1, arg2, ...) <- {
+  mean(x)
+}
+```
+
+Get help on any function using ?function_name.
+
+ggplot2
+===
+```{r echo = FALSE}
+library(ggplot2)
+tmp_df <- data.frame(condA = rnorm(50,1,2), condB = (rnorm(50,3,3))) %>%
+  gather(condition, amplitude)
+
+ggplot(tmp_df, aes(x = condition, y = amplitude, fill = condition)) +
+  geom_violin() +
+  geom_boxplot(width = 0.2) +
+  theme_bw()
 ```
 
 Piping %>%
@@ -105,11 +132,6 @@ nest(iris,-Species)
 
 How to select data
 ===
-
-Plotting
-===
-
-# ggplot2()
 
 Mixed-effects modelling
 ===
