@@ -509,7 +509,40 @@ allData %>%
 
 ## Frequency analysis
 
-R has several possible commands to perform FFTs.
+R has several possible commands to perform FFTs. Here we'll use the base R method *spectrum()*.
+
+```{r stats_spectrum}
+spec_psd <- clean_data %>%
+  nest(-electrode, -epoch) %>%
+  mutate(psd = map(data, ~spectrum(.x$amplitude, plot = FALSE)))
+
+spec_psd_two <- spec_psd %>%
+  mutate(freqs = map(.$psd,"freq"), spec = map(.$psd, "spec"))
+
+spec_psd_three <- spec_psd_two %>% select(-data,-psd) %>% unnest()
+
+spec_psd_three %>%
+  mutate(freqs = freqs*128) %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs,electrode) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = freqs, y= log10(spec), colour = electrode))+geom_line() +theme_classic()
+
+spec_psd_three %>%
+  mutate(freqs = freqs*128) %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs,electrode) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = log(freqs), y= 20*log10(spec/freqs), colour = electrode))+geom_line() +theme_classic()
+
+spec_psd_three %>%
+  mutate(freqs = freqs*256) %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs,electrode) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = freqs, y= 20*log10(spec/freqs)))+stat_smooth(method = "loess") +theme_classic()
+
+```
 
 ## Multivariate pattern analysis/machine learning
 
