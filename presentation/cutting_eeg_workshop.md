@@ -14,18 +14,6 @@ Packages
 ===
 Packages are the way you add features to R. As of today, there are 10754 packages available on the CRAN central repository that cover a huge range of capabilites. Some packages are already installed; we'll download others as we go on.
 
-What you can and can't do
-===
-
-## Can
-- Every statistic you can think of
-- 
-***
-## Can't
-- Most signal processing
-- Source-analysis
-- Time-frequency analysis
-
 RStudio
 ===
 

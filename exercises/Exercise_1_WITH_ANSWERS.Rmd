@@ -166,9 +166,9 @@ ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill
   facet_wrap("Object")
 ```
 
-To round off your plots you may want to add a horizontal line at 0 microvolts and a vertical line at 0 ms. Straight lines can be drawn using geom_vline() and geom_hline(). check the help!
+To round off your plots you may want to add a horizontal line at 0 microvolts and a vertical line at 0 ms. Straight lines can be drawn using geom_vline() and geom_hline(). Check the help!
 
-```{r}
+```{r final_plot}
 ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill = `Spatial Frequency`)) +
   stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2, colour = NA) +
   stat_summary(fun.y = mean, geom = "line", size = 1) +
@@ -177,47 +177,33 @@ ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill
   geom_hline(yintercept = 0, linetype = "dashed")
 ```
 
-### Difference waves
+### Finishing up
 
-A very useful tool when plotting ERPs is the difference wave. It's simpler to subtract two columns from each other than it is to subtract groups of rows from a single column. Thus, we need to make our data wide again.
+Save your final data frame and at least one of your plots.
 
-We can use spread() for this. It is the opposite of gather() and has the same syntax.
+To save a plot, the simplest thing to do is assign your plot to an object, and then save that object using *ggsave()*. Create a new directory called something like "user". 
 
-To make this a little more interesting, let's try out pipes (*%>%*) and *mutate()*.
+By default, anything you save will go in the present working directory - use *getwd()* to see what directory that is.
 
-Pipe the output from *spread()* down to text line and use *mutate()* to create a new variable - the difference between objects and non-objects.
+To save the data frame, either use *save()* or *write_csv()*.
 
-Assign it to a new data frame.
-
-```
-difference_df <- spread(final_df, Object, amplitude) %>%
-  mutate(difference = Object - `Non-Object`)
-
-head(difference_df)
-```
-
-```{r spreading_data}
-difference_df <- spread(difference_df, Object, amplitude) %>%
-  mutate(difference = Object - `Non-Object`)
-
-head(difference_df)
-```
-
-The data frame now has the difference between objects and non-objects for each level of spatial frequency. 
-
-Create an ERP plot facetted on Spatial Frequency to plot the difference between objects and non-objects in for each level of spatial frequency. Instead of using, *facet_wrap()*, try using *facet_grid()*. This will allow you to stack the facets vertically by using the following 
-
-facet_grid(varname ~ .)
-
-Add confidence intervals as above.
 
 ```{r}
-difference_df %>%
-  ggplot(aes(x = Time, y = difference, fill = `Spatial Frequency`)) +
-  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2)+
-  stat_summary(fun.y = mean, geom = "line") +
-  facet_grid(`Spatial Frequency`~.)
+getwd()
+
+plot_out <- ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill = `Spatial Frequency`)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2, colour = NA) +
+  stat_summary(fun.y = mean, geom = "line", size = 1) +
+  facet_wrap("Object") +
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  geom_hline(yintercept = 0, linetype = "dashed")
+
+# ggsave("plot_out.png",plot_out)
+
+# save()
+
 ```
+
 
 ## EXTRAS 
 
