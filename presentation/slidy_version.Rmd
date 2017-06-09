@@ -7,7 +7,7 @@ output: slidy_presentation
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## R Markdown
+## Tidy data
 
 ```{r}
 
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```
 
-## Slide with Bullets
+## long vs wide
 
 - Bullet 1
 - Bullet 2

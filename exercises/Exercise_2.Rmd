@@ -3,17 +3,41 @@ title: "How to run standard statistics"
 output: html_notebook
 ---
 
-## How to run statistics
-In the first exercise, we created a set of ERPs. Now we'll practice some ggplot2 skills using the dataframe we created.
+In the first exercise, you practiced plotting ERPs and many data manipulation commands. 
 
-Clear your workspace (press the broom icon in the upper right pane) and load the file you saved.
+Now we'll move on to running some straightforward statistics.
 
 Remember, help for any command can be looked up using ?command in console, or searching for it in the help pane.
 
+## Packages and commands
+
+You'll need to load the following packages
+* tidyverse
+* afex
+
+We'll be using the following new commands
+* group_by()
+* summarise()
+* t.test()
+* aov_ez()
+* map()/map_dbl()
+
 ```{r}
 library(tidyverse)
-
-load('../user_data/final_df.RData')
-head(final_df)
+library(afex)
 ```
 
+## Pre-specified time windows
+
+It's common to choose on a priori grounds specific time windows for analysis, taking, for example, mean amplitudes over a particular time window. 
+
+Let's start by examining ERPs in the P1 time window. We'll begin by pretending this isn't a 2 X 3 design, and doing paired t-tests on mean amplitudes in the time window from approximately 85-135 ms. 
+
+
+
+```{r}
+final_df %>%
+  filter(Time >= 85 & Time <= 135) %>%
+  group_by(Subject,Object) %>%
+  summarise(amplitude = mean(amplitude))
+```

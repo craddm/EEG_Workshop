@@ -1,0 +1,173 @@
+---
+title: "How to run standard statistics"
+output: html_notebook
+---
+
+In the first exercise, you practiced plotting ERPs and many data manipulation commands. 
+
+Now we'll move on to running some straightforward statistics.
+
+Remember, help for any command can be looked up using ?command in console, or searching for it in the help pane.
+
+## Packages and commands
+
+You'll need to load the following packages
+* tidyverse
+* afex
+
+We'll be using the following new commands
+* group_by()
+* summarise()
+* t.test()
+* aov_ez()
+* map()/map_dbl()
+
+```{r}
+library(tidyverse)
+library(afex)
+```
+
+## Pre-specified time windows
+
+It's common to choose on a priori grounds specific time windows for analysis, taking, for example, mean amplitudes over a particular time window. 
+
+Let's start by examining ERPs in the P1 time window. We'll begin by pretending this isn't a 2 X 3 design, and doing paired t-tests on mean amplitudes in the time window from approximately 85-135 ms. 
+
+Rows from a dataframe can be selected using *filter()*. Filter accepts logical, conditional arguments. For example, filter(Subject == 5) would select only rows from subject 5.
+
+Use filter to select rows where Time >= 85 and Time <= 135. Note that with multiple conditions, you must still specify 
+
+*group_by()* is used to group rows together. Specify which variables you want.
+
+*summarise()* is used to create summaries of multiple values. 
+
+Using these three commands one after the other
+
+Assign this to a separate data frame, as we want to keep the original for later analyses.
+
+```{r}
+obj_pairs <- final_df %>%
+  filter(Time >= 85 & Time <= 135) %>%
+  group_by(Subject,Object) %>%
+  summarise(amplitude = mean(amplitude))
+```
+
+Before running statistics, let's do some more plots.
+
+Set up a *ggplot()* object for your new dataframe.
+
+e.g.
+```
+ggplot(new_df, aes(x = Object, y = amplitude))
+```
+For the purposes of demonstration, let's start with a bar plot. Note: the purpose of this demonstration is to show that bar plots are bad. We'll also add 95% confidence intervals.
+
+Add bars using stat_summary(geom = "bar")
+Add errorbars using geom = "pointrange"; remember to change fun.data to plot confidence intervals!
+
+```{r bar_plots}
+ggplot(obj_pairs, aes(x = Object, y = amplitude)) +
+  stat_summary(geom = "bar") + 
+  stat_summary(fun.data = mean_cl_normal, geom = "pointrange")
+```
+
+We can do much better than this. Let's plot individual data points using geom_point() and join those points with a line so that we can see which points go together.
+
+```{r}
+ggplot(obj_pairs, aes(x = Object, y = amplitude, colour = factor(Subject))) +
+  geom_point() + 
+  geom_line(aes(group = Subject), alpha = 0.5) 
+  
+```
+
+This looks like Object amplitudes are overall higher, although the distributions substantially overlap. The direction is fairly consistent across subjects, with only one person going in the opposite direction.
+
+Let's go ahead with our paired t-test.
+
+```{r}
+test_result <- t.test(amplitude~Object, data = obj_pairs, paired = TRUE)
+test_result
+
+```
+
+Note that test_result is a list object with individual elements accessed using the $ operator or [] subsetting. 
+
+```{r query_object}
+str(test_result)
+test_result$p.value
+test_result$statistic
+test_result[4]
+```
+
+Helpfully, the output of many stats objects can be tidied up and turned into a dataframe using *tidy* from the *broom* package, which makes them easier to use for subsequent plotting (see next section).
+
+```{r}
+broom::tidy(test_result)
+```
+
+
+```{r}
+final_df %>%
+  filter(Time >= 85 & Time <= 135) %>%
+  group_by(Subject,Object, `Spatial Frequency`) %>%
+  summarise(amplitude = mean(amplitude))
+```
+
+
+```{r}
+hmm <- final_df %>%
+  filter(Time >= 85 & Time <= 135) %>%
+  group_by(Subject,Object, `Spatial Frequency`) %>%
+  rename(Frequency = `Spatial Frequency`) %>%
+  summarise(amplitude = mean(amplitude)) 
+hmm
+
+aov_ez( "Subject", "amplitude", hmm, within = c("Object", "`Spatial Frequency`"))
+
+```
+
+
+### Mass univariate tests
+
+Often we want to run a whole series of tests across multiple timepoints, electrodes, frequency bands etc.
+
+Each command in R operates on a single data frame. If we need to run a test on each timepoint, we need to separate dataframes for each timepoint.
+
+The nest() function from tidyr rearranges the data in this way.
+
+```{r}
+time_nest <- nest(final_df, -Time)
+head(time_nest)
+```
+
+Why is this useful? This makes it simple iterate through each timepoint using **map** commands from *purrr*. Map command (map, map_dbl, map_df) take a list as input and perform a function on each element of that list. We'll add an extra column to our nested data frame containing the output of the t.test() function applied to each element of the *data* list within the time_nest frame.
+
+```{r run_t_tests}
+time_nest <- mutate(time_nest,
+                    stats = map(data, ~t.test(amplitude ~ Object,
+                                              paired = TRUE, data = .x)))
+head(time_nest)
+```
+
+We now have a data frame with the results of the t.test function for each timepoint. Suppose you now want to retrieve the t.test results for a specific timepoint. You can access list elements using double brackets [[]]; you would need to find the right row number for the timepoint you want, and enclose that in the brackets.
+
+```{r query_nest}
+time_nest$stats[[10]]
+```
+
+Alternatively, we can use map to iterate through the list and extract, for example, each p-value.
+
+```{r get_pvals}
+time_nest %>% 
+  mutate(pvals = map_dbl(stats, "p.value")) 
+```
+Alternatively, we can use broom::tidy() to convert our statistical test results into a one-line data frame. Then we remove the original data using select() and unnest() to get back a data frame with a column for each element of the statistical test.
+
+```{r levStats}
+stat_out <- levCatGA %>%
+  nest(-Time) %>%
+  mutate(stats = (map(data, ~broom::tidy(t.test(amplitude~Category, paired = TRUE, data = .x))))) %>%
+  select(-data) %>%
+  unnest()
+```
+

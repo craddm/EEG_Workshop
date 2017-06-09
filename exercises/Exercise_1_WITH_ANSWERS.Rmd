@@ -197,10 +197,10 @@ head(difference_df)
 ```
 
 ```{r spreading_data}
-final_df <- spread(final_df, Object, amplitude) %>%
+difference_df <- spread(difference_df, Object, amplitude) %>%
   mutate(difference = Object - `Non-Object`)
 
-head(final_df)
+head(difference_df)
 ```
 
 The data frame now has the difference between objects and non-objects for each level of spatial frequency. 
@@ -212,7 +212,7 @@ facet_grid(varname ~ .)
 Add confidence intervals as above.
 
 ```{r}
-final_df %>%
+difference_df %>%
   ggplot(aes(x = Time, y = difference, fill = `Spatial Frequency`)) +
   stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2)+
   stat_summary(fun.y = mean, geom = "line") +
