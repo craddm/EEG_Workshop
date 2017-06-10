@@ -71,6 +71,7 @@ Be sure to inspect the new dataframe using head() or glimpse().
 
 ```{r gather_to_long}
 final_df <- gather(ObjFreqERPs, condition, amplitude, -Subject, -Time)
+head(final_df)
 ```
 
 The data is not yet *tidy*. Remember that this is a 2 x 3 design. The "condition" column currently combines two factors into one, which is not much use if we want to run, for example, an ANOVA - it will be treated as a single factor with six levels. 
@@ -79,11 +80,11 @@ We need to split "condition" into two variable columns, one for the Object facto
 
 The command separate() can do this for us - check ?separate
 
-For this task, you only need the first four arguments - separate(data, col, into, sep). Some explanation of terms from the help: "Bare column name" means a column name with no quote marks (e.g. condition rather than "condition").  To create a character vector with multiple entries, use the command c(), and enclose your entries in quote marks (e.g. c("colname1", "colname2)). In this case, there is a clear separator between the two factors - "/". Give the new columns meaningful names.
+For this task, you only need the first four arguments - separate(data, col, into, sep). Some explanation of terms from the help: "Bare column name" means a column name with no quote marks (e.g. condition rather than "condition").  To create a character vector with multiple entries, use the command c(), and enclose your entries in quote marks (e.g. c("colname1", "colname2)). In this case, there is a clear separator between the two factors - "/". Give the new columns the names "Object" and "Frequency".
 
 
 ```{r}
-final_df <- separate(final_df, condition, into = c("Object", "Spatial Frequency"), sep = "/")
+final_df <- separate(final_df, condition, into = c("Object", "Frequency"), sep = "/")
 head(final_df)
 ```
 
@@ -130,10 +131,10 @@ ggplot(final_df, aes(x = Time, y = amplitude, linetype = Object)) +
   stat_summary(fun.y = mean, geom = "line")
 ```
 
-Of course, this is a 2 x 3 design. Modify aes() to show `Spatial Frequency` in different colours. Change the thickness of the lines by specifying size = 1 within the stat_summary call. 
+Of course, this is a 2 x 3 design. Modify aes() to show Frequency in different colours. Change the thickness of the lines by specifying size = 1 within the stat_summary call. 
 
 ```{r objXfreq_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, linetype = Object)) +
+ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, linetype = Object)) +
   stat_summary(fun.y = mean, geom = "line", size = 1)
 ```
 
@@ -144,7 +145,7 @@ With six lines on the plot, it's getting a little hard to see clearly.
 Split this into two plots using facet_wrap("variable name").
 
 ```{r facet_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill = `Spatial Frequency`)) + 
+ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) + 
   stat_summary(fun.y = mean, geom = "line", size = 1) + facet_wrap("Object")
 ```
 
@@ -160,7 +161,7 @@ stat_summary(fun.data = mean, geom = "ribbon", alpha = 0.5)
 ```
 
 ```{r CIs_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill = `Spatial Frequency`)) +
+ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +
   stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2) +
   stat_summary(fun.y = mean, geom = "line", size = 1) +
   facet_wrap("Object")
@@ -169,7 +170,7 @@ ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill
 To round off your plots you may want to add a horizontal line at 0 microvolts and a vertical line at 0 ms. Straight lines can be drawn using geom_vline() and geom_hline(). Check the help!
 
 ```{r final_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill = `Spatial Frequency`)) +
+ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +
   stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2, colour = NA) +
   stat_summary(fun.y = mean, geom = "line", size = 1) +
   facet_wrap("Object") +
@@ -191,7 +192,7 @@ To save the data frame, either use *save()* or *write_csv()*.
 ```{r}
 getwd()
 
-plot_out <- ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill = `Spatial Frequency`)) +
+plot_out <- ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +
   stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2, colour = NA) +
   stat_summary(fun.y = mean, geom = "line", size = 1) +
   facet_wrap("Object") +

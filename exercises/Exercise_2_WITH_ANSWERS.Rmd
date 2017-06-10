@@ -14,6 +14,7 @@ Remember, help for any command can be looked up using ?command in console, or se
 You'll need to load the following packages
 * tidyverse
 * afex
+* broom
 
 We'll be using the following new commands
 * group_by()
@@ -22,10 +23,9 @@ We'll be using the following new commands
 * aov_ez()
 * map()/map_dbl()
 
-First, load the packages *tidyverse* and *afex*, and reload the data frame you saved from the first exercise using load() or read_csv().
+First, load the packages named above *tidyverse* and *afex*, and reload the data frame you saved from the first exercise using load() or read_csv().
 
-
-```{r}
+```{r load_packages, message = FALSE}
 library(tidyverse)
 library(afex)
 library(broom)
@@ -35,15 +35,15 @@ theme_set(theme_classic())
 
 ## Pre-specified time windows
 
-It's common to choose on a priori grounds specific time windows for analysis, taking, for example, mean amplitudes over a particular time window. 
+It's common to choose, **a priori**, specific time windows for analysis, taking, for example, mean amplitudes over a particular time window. 
 
 Let's start by examining ERPs in the P1 time window. We'll begin by pretending this isn't a 2 X 3 design, and doing paired t-tests on mean amplitudes in the time window from approximately 85-135 ms. 
 
 Rows from a dataframe can be selected using *filter()*. Filter accepts logical, conditional arguments. For example, filter(Subject == 5) would select only rows from subject 5.
 
-Use filter to select rows where Time >= 85 and Time <= 135. Note that with multiple conditions, you must still specify 
+Use filter to select rows where Time >= 85 and Time <= 135. Note that with multiple conditions, you have to specify the full argument (e.g. x > 5 & x < 8; not x > 5 & <8)
 
-*group_by()* is used to group rows together. Specify which variables you want.
+*group_by()* is used to group rows together according to the values or levels of the specified column. 
 
 *summarise()* is used to create summaries of multiple values. 
 
@@ -51,21 +51,16 @@ Using these three commands one after the other
 
 Assign this to a separate data frame, as we want to keep the original for later analyses.
 
-```{r}
+```{r new_df}
 obj_pairs <- final_df %>%
   filter(Time >= 85 & Time <= 135) %>%
   group_by(Subject, Object) %>%
   summarise(amplitude = mean(amplitude))
 
 head(obj_pairs)
-
-final_df %>%
-  filter(Time >= 85 & Time <= 135) %>%
-  group_by(Object) %>%
-  summarise(stdev = sd(amplitude),  se = stdev/n(), amplitude = mean(amplitude))
 ```
 
-Before running statistics, let's do some more plots.
+Before running statistics, let's do some plots.
 
 Set up a *ggplot()* object for your new dataframe.
 

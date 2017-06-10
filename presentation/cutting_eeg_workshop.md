@@ -22,7 +22,8 @@ Integrated development environment!
 
 Packages
 ===
-Packages are the way you add features to R. As of today, there are 10754 packages available on the CRAN central repository that cover a huge range of capabilites. Some packages are already installed; we'll download others as we go on.
+R is extensible through *packages*.
+
 
 R Basics
 ===
@@ -43,23 +44,31 @@ Data frames
 
 
 ```r
-head(iris)
+library(tidyverse)
+ObjFreqERPs <- read_csv("../data/ObjFreqERPs.csv")
+ObjFreqERPs
 ```
 
 ```
-  Sepal.Length Sepal.Width Petal.Length Petal.Width Species
-1          5.1         3.5          1.4         0.2  setosa
-2          4.9         3.0          1.4         0.2  setosa
-3          4.7         3.2          1.3         0.2  setosa
-4          4.6         3.1          1.5         0.2  setosa
-5          5.0         3.6          1.4         0.2  setosa
-6          5.4         3.9          1.7         0.4  setosa
+# A tibble: 6,135 x 8
+   `Object/BB` `Object/HSF` `Object/LSF` `Non-Object/LSF` `Non-Object/HSF`
+         <dbl>        <dbl>        <dbl>            <dbl>            <dbl>
+ 1    0.195420     0.392420      0.23052          -1.1717          0.55332
+ 2    0.188040     0.280100      0.42763          -1.1999          0.65972
+ 3    0.171190     0.186090      0.65327          -1.2339          0.75703
+ 4    0.142760     0.118700      0.87669          -1.2761          0.82759
+ 5    0.103260     0.036484      1.03270          -1.3268          0.86519
+ 6    0.065559    -0.080596      1.10820          -1.3844          0.88463
+ 7    0.047670    -0.179570      1.14740          -1.4429          0.90511
+ 8    0.060566    -0.210520      1.17710          -1.4880          0.94317
+ 9    0.108420    -0.199480      1.18150          -1.5042          0.99105
+10    0.179090    -0.203010      1.13920          -1.4903          1.02380
+# ... with 6,125 more rows, and 3 more variables: `Non-Object/BB` <dbl>,
+#   Time <dbl>, Subject <int>
 ```
 
 Functions
 ===
-
-Commands that perform some kind of operation, usually on some data that is passed to.
 
 ```
 mean <- function(x) {
@@ -68,13 +77,18 @@ mean <- function(x) {
 ```
 Get help on any function using ?function_name.
 
-
-Assign the output of functions to variables using the ```<-``` operator.
-
-
 Assignment
 ===
 
+Assign the ```<-``` operator.
+
+e.g. 
+
+```
+x <- 1
+y <- "hello"
+z <- mean(x)
+```
 How to import data
 ===
 From Matlab 

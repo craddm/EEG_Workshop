@@ -22,7 +22,8 @@ Integrated development environment!
 
 Packages
 ===
-Packages are the way you add features to R. As of today, there are 10754 packages available on the CRAN central repository that cover a huge range of capabilites. Some packages are already installed; we'll download others as we go on.
+R is extensible through *packages*.
+
 
 R Basics
 ===
@@ -42,13 +43,13 @@ Data frames
 ===
 
 ```{r data-frames}
-head(iris)
+library(tidyverse)
+ObjFreqERPs <- read_csv("../data/ObjFreqERPs.csv")
+ObjFreqERPs
 ```
 
 Functions
 ===
-
-Commands that perform some kind of operation, usually on some data that is passed to.
 
 ```
 mean <- function(x) {
@@ -57,13 +58,18 @@ mean <- function(x) {
 ```
 Get help on any function using ?function_name.
 
-
-Assign the output of functions to variables using the ```<-``` operator.
-
-
 Assignment
 ===
 
+Assign the ```<-``` operator.
+
+e.g. 
+
+```
+x <- 1
+y <- "hello"
+z <- mean(x)
+```
 How to import data
 ===
 From Matlab 
