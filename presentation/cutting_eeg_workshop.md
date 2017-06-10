@@ -10,9 +10,6 @@ About R
 1. Free, open source
 2. Massive community
 
-Packages
-===
-Packages are the way you add features to R. As of today, there are 10754 packages available on the CRAN central repository that cover a huge range of capabilites. Some packages are already installed; we'll download others as we go on.
 
 RStudio
 ===
@@ -22,6 +19,61 @@ Integrated development environment!
 - Projects
 - Notebooks
 - Github integration
+
+Packages
+===
+Packages are the way you add features to R. As of today, there are 10754 packages available on the CRAN central repository that cover a huge range of capabilites. Some packages are already installed; we'll download others as we go on.
+
+R Basics
+===
+
+- Vectors
+- Lists
+- Data frames
+- Functions
+
+Vectors
+===
+
+Lists
+===
+
+Data frames
+===
+
+
+```r
+head(iris)
+```
+
+```
+  Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+1          5.1         3.5          1.4         0.2  setosa
+2          4.9         3.0          1.4         0.2  setosa
+3          4.7         3.2          1.3         0.2  setosa
+4          4.6         3.1          1.5         0.2  setosa
+5          5.0         3.6          1.4         0.2  setosa
+6          5.4         3.9          1.7         0.4  setosa
+```
+
+Functions
+===
+
+Commands that perform some kind of operation, usually on some data that is passed to.
+
+```
+mean <- function(x) {
+  mean(x)
+}
+```
+Get help on any function using ?function_name.
+
+
+Assign the output of functions to variables using the ```<-``` operator.
+
+
+Assignment
+===
 
 How to import data
 ===
@@ -48,34 +100,9 @@ Set of integrated packages
 library(tidyverse)
 ```
 
-Data frames
-===
 
 
-```r
-head(iris)
-```
 
-```
-  Sepal.Length Sepal.Width Petal.Length Petal.Width Species
-1          5.1         3.5          1.4         0.2  setosa
-2          4.9         3.0          1.4         0.2  setosa
-3          4.7         3.2          1.3         0.2  setosa
-4          4.6         3.1          1.5         0.2  setosa
-5          5.0         3.6          1.4         0.2  setosa
-6          5.4         3.9          1.7         0.4  setosa
-```
-
-Functions
-===
-
-```
-mean_fun <- function(x, arg1, arg2, ...) <- {
-  mean(x)
-}
-```
-
-Get help on any function using ?function_name.
 
 ggplot2
 ===

@@ -22,12 +22,15 @@ We'll be using the following new commands
 * aov_ez()
 * map()/map_dbl()
 
-First, load the 
+First, load the packages *tidyverse* and *afex*, and reload the data frame you saved from the first exercise using load() or read_csv().
 
 
 ```{r}
 library(tidyverse)
 library(afex)
+library(broom)
+load('../user_data/final_df.RData')
+theme_set(theme_classic())
 ```
 
 ## Pre-specified time windows
@@ -51,8 +54,15 @@ Assign this to a separate data frame, as we want to keep the original for later 
 ```{r}
 obj_pairs <- final_df %>%
   filter(Time >= 85 & Time <= 135) %>%
-  group_by(Subject,Object) %>%
+  group_by(Subject, Object) %>%
   summarise(amplitude = mean(amplitude))
+
+head(obj_pairs)
+
+final_df %>%
+  filter(Time >= 85 & Time <= 135) %>%
+  group_by(Object) %>%
+  summarise(stdev = sd(amplitude),  se = stdev/n(), amplitude = mean(amplitude))
 ```
 
 Before running statistics, let's do some more plots.
@@ -65,7 +75,7 @@ ggplot(new_df, aes(x = Object, y = amplitude))
 ```
 For the purposes of demonstration, let's start with a bar plot. Note: the purpose of this demonstration is to show that bar plots are bad. We'll also add 95% confidence intervals.
 
-Add bars using stat_summary(geom = "bar")
+Add bars using stat_summary(geom = "bar").
 Add errorbars using geom = "pointrange"; remember to change fun.data to plot confidence intervals!
 
 ```{r bar_plots}
@@ -74,45 +84,68 @@ ggplot(obj_pairs, aes(x = Object, y = amplitude)) +
   stat_summary(fun.data = mean_cl_normal, geom = "pointrange")
 ```
 
-We can do much better than this. Let's plot individual data points using geom_point() and join those points with a line so that we can see which points go together.
+We can do much better than this. Add individual data points using geom_point(). Remember: each layer of the plot is drawn consecutively.
 
-```{r}
+```{r bar_plots_with_dots}
+ggplot(obj_pairs, aes(x = Object, y = amplitude)) +
+  stat_summary(geom = "bar") +
+  geom_point() + 
+  stat_summary(fun.data = mean_cl_normal, geom = "pointrange")
+```
+
+Let's ditch the bars entirely and add lines connecting the datapoints from within each subject, so that we can see the trend for each subject.
+
+```{r scatterplot}
 ggplot(obj_pairs, aes(x = Object, y = amplitude, colour = factor(Subject))) +
   geom_point() + 
   geom_line(aes(group = Subject), alpha = 0.5) 
-  
 ```
 
-This looks like Object amplitudes are overall higher, although the distributions substantially overlap. The direction is fairly consistent across subjects, with only one person going in the opposite direction.
+This looks like Object amplitudes are overall higher, although the distributions substantially overlap. The direction is mostly consistent across subjects, with only one person going in the opposite direction.
 
-Let's go ahead with our paired t-test.
+Let's go ahead with our paired t-test using the *t.test()* command.
 
-```{r}
+*t.test()* can be used with typical R modelling syntax:
+
+```
+dv ~ iv
+```
+
+In R, ~ used in a formula usually means "modelled by". In this case we want to model amplitude by Object. Make sure you  ```paired = TRUE``` to indicate that this is a **paired**, dependent t-test. Allocate the result to a variable using *<-*
+
+```{r single_t_test}
 test_result <- t.test(amplitude~Object, data = obj_pairs, paired = TRUE)
 test_result
-
 ```
 
-Note that test_result is a list object with individual elements accessed using the $ operator or [] subsetting. 
+The resulting variable is a list object with individual elements that can be accessed using the $ operator or [] subsetting. For example, if you stored the output of t-test in a variable called test_result, you could get the p-value as follows:
+
+```
+test_result$p.value
+test_result[3]
+```
+
 
 ```{r query_object}
 str(test_result)
 test_result$p.value
 test_result$statistic
-test_result[4]
+test_result[[3]]
 ```
 
-Helpfully, the output of many stats objects can be tidied up and turned into a dataframe using *tidy* from the *broom* package, which makes them easier to use for subsequent plotting (see next section).
+Helpfully, the output of many stats objects can be tidied up and turned into a dataframe using *tidy* from the *broom* package, which makes them easier to use for subsequent plotting (see next section). Try that now
 
 ```{r}
-broom::tidy(test_result)
+tidy(test_result)
 ```
+
+
 
 
 ```{r}
 final_df %>%
   filter(Time >= 85 & Time <= 135) %>%
-  group_by(Subject,Object, `Spatial Frequency`) %>%
+  group_by(Subject, Object, Frequency) %>%
   summarise(amplitude = mean(amplitude))
 ```
 
@@ -125,18 +158,32 @@ hmm <- final_df %>%
   summarise(amplitude = mean(amplitude)) 
 hmm
 
-aov_ez( "Subject", "amplitude", hmm, within = c("Object", "`Spatial Frequency`"))
+aov_ez( "Subject", "amplitude", hmm, within = c("Object", "Frequency"))
 
+
+hmm
+summarySEwithin(hmm, idvar = "Subject", withinvars = c("Object","Frequency"), measurevar = "amplitude")
 ```
 
+```{r}
+all_pairs <- final_df %>%
+  filter(Time >= 85 & Time <= 135) %>%
+  group_by(Subject,Object, `Spatial Frequency`) %>%
+  rename(Frequency = `Spatial Frequency`) %>%
+  summarise(amplitude = mean(amplitude))
+
+head(all_pairs)
+
+library(Rmisc)
+
+summarySEwithin(all_pairs, withinvars = "Spatial Frequency")
+
+```
 
 ### Mass univariate tests
 
 Often we want to run a whole series of tests across multiple timepoints, electrodes, frequency bands etc.
-
-Each command in R operates on a single data frame. If we need to run a test on each timepoint, we need to separate dataframes for each timepoint.
-
-The nest() function from tidyr rearranges the data in this way.
+Use the *nest()* function to create a nested data frame.
 
 ```{r}
 time_nest <- nest(final_df, -Time)

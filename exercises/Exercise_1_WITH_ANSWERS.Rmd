@@ -200,7 +200,7 @@ plot_out <- ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Freq
 
 # ggsave("plot_out.png",plot_out)
 
-# save()
+ save(final_df, file = "../user_data/final_df.RData")
 
 ```
 
