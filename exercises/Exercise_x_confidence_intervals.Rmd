@@ -1,0 +1,78 @@
+---
+title: "Confidence intervals and difference waves"
+output: html_notebook
+---
+
+It's best to include some measure of variability around your ERPs.
+
+We can also use stat_summary to calculate and plot confidence intervals or standard errors for us. The geom for this is a "ribbon".
+
+Think about layering. The ribbon should be beneath the lines rather than drawn on top. In addition, since the CIs will overlap, make them transparent using by specifying alpha within the stat_summary call. Experiment with different values of alpha between 0 and 1. Add the following to your ggplot code in the appropriate place.
+
+```
+stat_summary(fun.data = mean, geom = "ribbon", alpha = 0.5) 
+```
+
+```{r CIs_plot}
+ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2, colour = NA) +
+  stat_summary(fun.y = mean, geom = "line", size = 1) +
+  facet_wrap("Object") +
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  geom_hline(yintercept = 0, linetype = "dashed")
+```
+
+A problem with these intervals is that show between-subject variability. This is a fully within-subject design. Thus these intervals cannot be used to infer differences.
+
+What we are really interested in is the variability within-subjects of the difference between conditions, and hence the difference between the ERPs from each condition.
+
+## Difference waves
+
+A very useful tool when plotting ERPs is the difference wave. It's simpler to subtract two columns from each other than it is to subtract groups of rows from a single column. Thus, we need to make our data wide again.
+
+We can use spread() for this. It is the opposite of gather() and has the same syntax.
+
+To make this a little more interesting, let's try out pipes (*%>%*) and *mutate()*.
+
+Pipe the output from *spread()* down to text line and use *mutate()* to create a new variable - the difference between objects and non-objects.
+
+Assign it to a new data frame.
+
+```{r spreading_data}
+difference_df <- spread(final_df, Object, amplitude) %>%
+  mutate(difference = Object - `Non-Object`)
+
+head(difference_df)
+```
+
+The data frame now has the difference between objects and non-objects for each level of spatial frequency. 
+
+Create an ERP plot facetted on Frequency to plot the difference between objects and non-objects in for each level of spatial frequency. Instead of using, *facet_wrap()*, try using *facet_grid()*. This will allow you to stack the facets vertically by using the following 
+
+facet_grid(varname ~ .)
+
+Add confidence intervals as above.
+
+```{r plot_difference}
+difference_df %>%
+  ggplot(aes(x = Time, y = difference, fill = Frequency)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2)+
+  stat_summary(fun.y = mean, geom = "line") +
+  facet_grid(Frequency~.)
+```
+
+Another thing we can do to show variability is add lines for each individual subject.
+
+We can add lines using *geom_line()*. 
+
+ggplot draws lines by joining individual datapoints together; to understand that it shoud group the lines by subject
+
+
+```{r plot_indivs}
+difference_df %>%
+  ggplot(aes(x = Time, y = difference, fill = Frequency)) +
+  geom_line(aes(group = Subject), alpha = 0.2) +
+  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2)+
+  stat_summary(fun.y = mean, geom = "line") +
+  facet_grid(Frequency~.)
+```

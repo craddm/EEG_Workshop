@@ -11,6 +11,12 @@ About R
 2. Massive community
 
 
+Why use R for EEG? 
+===
+
+
+
+
 RStudio
 ===
 
@@ -114,13 +120,11 @@ Set of integrated packages
 library(tidyverse)
 ```
 
-
-
-
-
 ggplot2
 ===
 ![plot of chunk unnamed-chunk-2](cutting_eeg_workshop-figure/unnamed-chunk-2-1.png)
+***
+![plot of chunk unnamed-chunk-3](cutting_eeg_workshop-figure/unnamed-chunk-3-1.png)
 
 Piping %>%
 ===
@@ -150,6 +154,7 @@ Summarizing data
 2. Summarise data
 
 
+
 Nested data frames
 ===
 A useful concept from the tidyverse is the nested data frame. A column in a data frame can be a list, and a list can contain data frames. 
@@ -167,7 +172,6 @@ nest(iris,-Species)
 2 versicolor <tibble [50 x 4]>
 3  virginica <tibble [50 x 4]>
 ```
-
 
 How to select data
 ===
@@ -201,8 +205,20 @@ Mass Univariate Statistics
 library(purrr)
 ```
 
+Hierarchical modelling
+===
+
 Machine learning
 ===
 
 Caret
+
+
+Exercises
+===
+
+1. Get help for commands using *?command*
+2. Commands are indicated in the text in *italics* and followed by parentheses e.g. *command()*
+3. Auto-complete is (mostly) your friend
+4. Use the chunks! 
 

@@ -11,6 +11,12 @@ About R
 2. Massive community
 
 
+Why use R for EEG? 
+===
+
+
+
+
 RStudio
 ===
 
@@ -94,21 +100,32 @@ Set of integrated packages
 library(tidyverse)
 ```
 
-
-
-
-
 ggplot2
 ===
 ```{r echo = FALSE}
 library(ggplot2)
-tmp_df <- data.frame(condA = rnorm(50,1,2), condB = (rnorm(50,3,3))) %>%
-  gather(condition, amplitude)
+library(gridExtra)
 
-ggplot(tmp_df, aes(x = condition, y = amplitude, fill = condition)) +
+tmp_df <- gather(ObjFreqERPs, condition, amplitude, -Subject, -Time) %>%
+  separate(condition, into = c("Object", "Frequency"), sep = "/") %>%
+  group_by(Subject, Object) %>%
+  summarise(amplitude = mean(amplitude))
+
+vio_box <- ggplot(tmp_df, aes(x = Object, y = amplitude, fill = Object)) +
   geom_violin() +
   geom_boxplot(width = 0.2) +
   theme_bw()
+
+pairplot_box <- ggplot(tmp_df, aes(x = Object, y = amplitude, colour = factor(Subject)))+
+  geom_point() +
+  theme_bw()
+
+vio_box
+
+```
+***
+```{r, echo = FALSE}
+pairplot_box
 ```
 
 Piping %>%
@@ -142,6 +159,7 @@ Summarizing data
 
 
 ```
+
 Nested data frames
 ===
 A useful concept from the tidyverse is the nested data frame. A column in a data frame can be a list, and a list can contain data frames. 
@@ -149,7 +167,6 @@ A useful concept from the tidyverse is the nested data frame. A column in a data
 ```{r}
 nest(iris,-Species)
 ```
-
 
 How to select data
 ===
@@ -182,6 +199,9 @@ Mass Univariate Statistics
 library(purrr)
 ```
 
+Hierarchical modelling
+===
+
 Machine learning
 ===
 
@@ -189,3 +209,12 @@ Caret
 ```{r caret_demo}
 
 ```
+
+Exercises
+===
+
+1. Get help for commands using *?command*
+2. Commands are indicated in the text in *italics* and followed by parentheses e.g. *command()*
+3. Auto-complete is (mostly) your friend
+4. Use the chunks! 
+

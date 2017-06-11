@@ -1,0 +1,44 @@
+---
+title: "Hierarchical modelling"
+output: html_notebook
+---
+
+
+Two different approaches to hierarchichal modelling.
+
+
+
+Fit a GLM at the individual level
+
+This is a first-level analysis
+
+
+
+```{r run_lme}
+
+```
+
+
+
+Take the parameter estimates to the second-level
+
+
+
+```{r}
+
+```
+
+
+## Linear mixed effect model
+
+The above approach is sometimes called the summary statistic approach, and is an approximation.
+
+You can also model both the subject and 
+
+
+```{r}
+
+
+
+
+```

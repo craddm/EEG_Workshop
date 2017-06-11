@@ -1,0 +1,62 @@
+---
+title: "R basics"
+output: html_notebook
+---
+
+
+
+
+
+## Assignment
+
+The assignment operator in R is <-
+
+```
+a <- 2 + 2
+```
+
+Note = 
+
+## Functions
+
+```
+a <- mean(x)
+
+```
+
+## Installing and loading packages
+
+Packages extend the capabilites of R by implementing functions. Functions do things such as calculating means, run ANOVA.
+
+Several of the packages we'll be using have already been installed.
+
+Packages which are installed are loaded using the *library()* command.
+
+Use *library()* to load the **tidyverse** package.
+
+```{r load_packages}
+library(tidyverse)
+```
+
+The **tidyverse** package is actually a collection of several packages that implement a wide variety of features that we'll be using.
+
+One of those is **dplyr**, a package for manipulation and reorganization of data.
+
+Packages often include help or information in the form of *vignettes*; short documents giving more detail about the purpose of and use of the package.
+
+Those available with a package can be found using *browseVignettes()*. The package name must be given in quotes.
+
+Try this now for **dplyr**.
+
+```{r vignette}
+browseVignettes("dplyr")
+```
+
+**dplyr** includes functions such as *filter()*, *mutate()*, and *select()*.
+
+Help for functions can be found using *?function_name* if the package is already loaded, *??function_name* if it is not.
+
+
+```{r help_function}
+?mutate
+```

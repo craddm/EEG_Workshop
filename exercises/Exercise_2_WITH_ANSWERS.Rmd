@@ -19,8 +19,10 @@ You'll need to load the following packages
 We'll be using the following new commands
 * group_by()
 * summarise()
+* mutate()
 * t.test()
 * aov_ez()
+* filter()
 * map()/map_dbl()
 
 First, load the packages named above *tidyverse* and *afex*, and reload the data frame you saved from the first exercise using load() or read_csv().
@@ -35,7 +37,9 @@ theme_set(theme_classic())
 
 ## Pre-specified time windows
 
-It's common to choose, **a priori**, specific time windows for analysis, taking, for example, mean amplitudes over a particular time window. 
+Choose a time-range to analyse: 
+
+e.g. P1 ~85ms - 135ms
 
 Let's start by examining ERPs in the P1 time window. We'll begin by pretending this isn't a 2 X 3 design, and doing paired t-tests on mean amplitudes in the time window from approximately 85-135 ms. 
 
@@ -46,8 +50,6 @@ Use filter to select rows where Time >= 85 and Time <= 135. Note that with multi
 *group_by()* is used to group rows together according to the values or levels of the specified column. 
 
 *summarise()* is used to create summaries of multiple values. 
-
-Using these three commands one after the other
 
 Assign this to a separate data frame, as we want to keep the original for later analyses.
 
@@ -68,9 +70,14 @@ e.g.
 ```
 ggplot(new_df, aes(x = Object, y = amplitude))
 ```
-For the purposes of demonstration, let's start with a bar plot. Note: the purpose of this demonstration is to show that bar plots are bad. We'll also add 95% confidence intervals.
+For the purposes of demonstration, let's start with a bar plot. 
+
+Note: part of the purpose of this demonstration is to show that bar plots are *bad* ;)
+
+We'll also add 95% confidence intervals.
 
 Add bars using stat_summary(geom = "bar").
+
 Add errorbars using geom = "pointrange"; remember to change fun.data to plot confidence intervals!
 
 ```{r bar_plots}
@@ -113,49 +120,48 @@ test_result <- t.test(amplitude~Object, data = obj_pairs, paired = TRUE)
 test_result
 ```
 
-The resulting variable is a list object with individual elements that can be accessed using the $ operator or [] subsetting. For example, if you stored the output of t-test in a variable called test_result, you could get the p-value as follows:
+The resulting variable is a list object with individual elements that can be accessed using the $ operator or [] subsetting. 
+
+For example, if you stored the output of t-test in a variable called test_result, you could get the p-value as follows:
 
 ```
 test_result$p.value
 test_result[3]
 ```
 
+You query the structure of an R object using *str()* - try now.
 
-```{r query_object}
+```{r structs}
 str(test_result)
-test_result$p.value
-test_result$statistic
-test_result[[3]]
 ```
 
-Helpfully, the output of many stats objects can be tidied up and turned into a dataframe using *tidy* from the *broom* package, which makes them easier to use for subsequent plotting (see next section). Try that now
+Helpfully, the output of many stats objects can be tidied up and turned into a dataframe using *tidy()* from the *broom* package, which makes them easier to use for subsequent plotting (see next section). Try that now (no need to assign the output to a new variable).
 
-```{r}
+```{r tidy_obj}
 tidy(test_result)
 ```
 
+### ANOVA
 
+Of course, the actual design is a 2 X 3 repeated measures ANOVA. 
 
+There are several ways to run ANOVA in R. We'll use *aov_ez()* from the *afex* package.
 
-```{r}
-final_df %>%
+```{r run_aov}
+aov_style <- final_df %>%
   filter(Time >= 85 & Time <= 135) %>%
-  group_by(Subject, Object, Frequency) %>%
-  summarise(amplitude = mean(amplitude))
+  group_by(Subject,Object, Frequency) %>%
+  summarise(amplitude = mean(amplitude)) 
+
+aov_out <- aov_ez( "Subject", "amplitude", aov_style, within = c("Object", "Frequency"))
+aov_out
 ```
 
+```{r post_hocs}
+lsmeans(aov_out, c("Object","Frequency"))
+```
 
-```{r}
-hmm <- final_df %>%
-  filter(Time >= 85 & Time <= 135) %>%
-  group_by(Subject,Object, `Spatial Frequency`) %>%
-  rename(Frequency = `Spatial Frequency`) %>%
-  summarise(amplitude = mean(amplitude)) 
-hmm
-
-aov_ez( "Subject", "amplitude", hmm, within = c("Object", "Frequency"))
-
-
+```
 hmm
 summarySEwithin(hmm, idvar = "Subject", withinvars = c("Object","Frequency"), measurevar = "amplitude")
 ```
@@ -163,8 +169,7 @@ summarySEwithin(hmm, idvar = "Subject", withinvars = c("Object","Frequency"), me
 ```{r}
 all_pairs <- final_df %>%
   filter(Time >= 85 & Time <= 135) %>%
-  group_by(Subject,Object, `Spatial Frequency`) %>%
-  rename(Frequency = `Spatial Frequency`) %>%
+  group_by(Subject,Object, Frequency) %>%
   summarise(amplitude = mean(amplitude))
 
 head(all_pairs)
@@ -175,86 +180,3 @@ summarySEwithin(all_pairs, withinvars = "Spatial Frequency")
 
 ```
 
-### Mass univariate tests
-
-Often we want to run a whole series of tests across multiple timepoints, electrodes, frequency bands etc.
-Use the *nest()* function to create a nested data frame.
-
-```{r}
-time_nest <- nest(final_df, -Time)
-head(time_nest)
-```
-
-Why is this useful? This makes it simple iterate through each timepoint using **map** commands from *purrr*. Map command (map, map_dbl, map_df) take a list as input and perform a function on each element of that list. We'll add an extra column to our nested data frame containing the output of the t.test() function applied to each element of the *data* list within the time_nest frame.
-
-```{r run_t_tests}
-time_nest <- mutate(time_nest,
-                    stats = map(data, ~t.test(amplitude ~ Object,
-                                              paired = TRUE, data = .x)))
-head(time_nest)
-```
-
-We now have a data frame with the results of the t.test function for each timepoint. Suppose you now want to retrieve the t.test results for a specific timepoint. You can access list elements using double brackets [[]]; you would need to find the right row number for the timepoint you want, and enclose that in the brackets.
-
-```{r query_nest}
-time_nest$stats[[10]]
-```
-
-Alternatively, we can use map to iterate through the list and extract, for example, each p-value.
-
-```{r get_pvals}
-time_nest %>% 
-  mutate(pvals = map_dbl(stats, "p.value")) 
-```
-Alternatively, we can use broom::tidy() to convert our statistical test results into a one-line data frame. Then we remove the original data using select() and unnest() to get back a data frame with a column for each element of the statistical test.
-
-```{r levStats}
-stat_out <- levCatGA %>%
-  nest(-Time) %>%
-  mutate(stats = (map(data, ~broom::tidy(t.test(amplitude~Category, paired = TRUE, data = .x))))) %>%
-  select(-data) %>%
-  unnest()
-```
-
-
-### Difference waves
-
-A very useful tool when plotting ERPs is the difference wave. It's simpler to subtract two columns from each other than it is to subtract groups of rows from a single column. Thus, we need to make our data wide again.
-
-We can use spread() for this. It is the opposite of gather() and has the same syntax.
-
-To make this a little more interesting, let's try out pipes (*%>%*) and *mutate()*.
-
-Pipe the output from *spread()* down to text line and use *mutate()* to create a new variable - the difference between objects and non-objects.
-
-Assign it to a new data frame.
-
-```
-difference_df <- spread(final_df, Object, amplitude) %>%
-  mutate(difference = Object - `Non-Object`)
-
-head(difference_df)
-```
-
-```{r spreading_data}
-difference_df <- spread(difference_df, Object, amplitude) %>%
-  mutate(difference = Object - `Non-Object`)
-
-head(difference_df)
-```
-
-The data frame now has the difference between objects and non-objects for each level of spatial frequency. 
-
-Create an ERP plot facetted on Spatial Frequency to plot the difference between objects and non-objects in for each level of spatial frequency. Instead of using, *facet_wrap()*, try using *facet_grid()*. This will allow you to stack the facets vertically by using the following 
-
-facet_grid(varname ~ .)
-
-Add confidence intervals as above.
-
-```{r}
-difference_df %>%
-  ggplot(aes(x = Time, y = difference, fill = `Spatial Frequency`)) +
-  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2)+
-  stat_summary(fun.y = mean, geom = "line") +
-  facet_grid(`Spatial Frequency`~.)
-```
