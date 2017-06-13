@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Loading multiple files"
 output: html_notebook
 ---
 

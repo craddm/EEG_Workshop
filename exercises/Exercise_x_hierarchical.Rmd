@@ -1,14 +1,22 @@
 ---
-title: "Hierarchical modelling"
-output: html_notebook
+title: "Fitting and plotting individual GLMs"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
 ---
 
 
+
+## 
 Two different approaches to hierarchichal modelling.
 
 Fit a GLM at the subject level
 
-First let's load some data.
+First, let's load some data.
 
 ```{r run_lme}
 library(feather)

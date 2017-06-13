@@ -172,22 +172,18 @@ $(document).ready(function () {
 
 
 <!-- rnb-text-begin -->
+<div id="packages-and-commands" class="section level2">
+<h2>Packages and commands</h2>
 <p>Load up the packages * tidyverse * caret</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5gYGAifQ== -->
 <pre class="r"><code>library(tidyverse)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyB0aWR5dmVyc2U6IGdncGxvdDJcbkxvYWRpbmcgdGlkeXZlcnNlOiB0aWJibGVcbkxvYWRpbmcgdGlkeXZlcnNlOiB0aWR5clxuTG9hZGluZyB0aWR5dmVyc2U6IHJlYWRyXG5Mb2FkaW5nIHRpZHl2ZXJzZTogcHVycnJcbkxvYWRpbmcgdGlkeXZlcnNlOiBkcGx5clxuQ29uZmxpY3RzIHdpdGggdGlkeSBwYWNrYWdlcyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tXG5maWx0ZXIoKTogZHBseXIsIHN0YXRzXG5sYWcoKTogICAgZHBseXIsIHN0YXRzXG4ifQ== -->
-<pre><code>Loading tidyverse: ggplot2
-Loading tidyverse: tibble
-Loading tidyverse: tidyr
-Loading tidyverse: readr
-Loading tidyverse: purrr
-Loading tidyverse: dplyr
-Conflicts with tidy packages -------------------------------------------------------------------------------------------------------
-filter(): dplyr, stats
-lag():    dplyr, stats</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiV2FybmluZyBtZXNzYWdlOlxuSW4gc2NhbihmaWxlID0gZmlsZSwgd2hhdCA9IHdoYXQsIHNlcCA9IHNlcCwgcXVvdGUgPSBxdW90ZSwgZGVjID0gZGVjLCAgOlxuICBFT0Ygd2l0aGluIHF1b3RlZCBzdHJpbmdcbiJ9 -->
+<pre><code>Warning message:
+In scan(file = file, what = what, sep = sep, quote = quote, dec = dec,  :
+  EOF within quoted string</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShjYXJldClcbmBgYCJ9 -->
 <pre class="r"><code>library(caret)</code></pre>
@@ -240,23 +236,40 @@ See spec(...) for full column specifications.</code></pre>
 <p>Use <em>nest()</em></p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2xhc3NpZnlfZGF0YSA8LSBtbmVfZGF0YSAlPiVcbiAgc2VsZWN0KC10b3VjaCwtcmVwb3J0LC1lcG9jaCkgJT4lXG4gIG5lc3QoLXRpbWUpICU+JVxuICBtdXRhdGUoZml0ID0gbWFwKGRhdGEsIH50cmFpbihsaWdodCB+IC4sIGRhdGEgPSAueCwgcHJlUHJvY2VzcyA9IFwic2NhbGVcIixcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbWV0aG9kID0gXCJnbG1uZXRcIiwgZmFtaWx5ID0gXCJiaW5vbWlhbFwiLCB0ckNvbnRyb2wgPSBmaXRDb250cm9sKSkpXG5cblpaIDwtIGRhdGEuZnJhbWUoQWNjdXJhY3kgPSBtYXAoeiRmaXQsXCJyZXNhbXBsZVwiKSAlPiVcbiAgICAgICAgICAgICAgICAgICBtYXAoXCJBY2N1cmFjeVwiKSAlPiVcbiAgICAgICAgICAgICAgICAgICBtYXBfZGJsKH5tZWFuKC54KSksIHRpbWUgPSB6JHRpbWUpXG5aWiR0aW1lIDwtIHokdGltZVxuXG5nZ3Bsb3QoWlosIGFlcyh0aW1lLCBBY2N1cmFjeSkpK2dlb21fbGluZSgpXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY2xhc3NpZnlfZGF0YSA8LSBtbmVfZGF0YSAlPiVcbiAgc2VsZWN0KC10b3VjaCwtcmVwb3J0LC1lcG9jaCkgJT4lXG4gIG5lc3QoLXRpbWUpICU+JVxuICBtdXRhdGUoZml0ID0gbWFwKGRhdGEsIH50cmFpbihsaWdodCB+IC4sIGRhdGEgPSAueCwgcHJlUHJvY2VzcyA9IFwic2NhbGVcIixcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgbWV0aG9kID0gXCJnbG1uZXRcIiwgZmFtaWx5ID0gXCJiaW5vbWlhbFwiLCB0ckNvbnRyb2wgPSBmaXRDb250cm9sKSkpXG5gYGAifQ== -->
 <pre class="r"><code>classify_data &lt;- mne_data %&gt;%
   select(-touch,-report,-epoch) %&gt;%
   nest(-time) %&gt;%
   mutate(fit = map(data, ~train(light ~ ., data = .x, preProcess = &quot;scale&quot;,
-                                method = &quot;glmnet&quot;, family = &quot;binomial&quot;, trControl = fitControl)))
-
-ZZ &lt;- data.frame(Accuracy = map(z$fit,&quot;resample&quot;) %&gt;%
-                   map(&quot;Accuracy&quot;) %&gt;%
-                   map_dbl(~mean(.x)), time = z$time)
-ZZ$time &lt;- z$time
-
-ggplot(ZZ, aes(time, Accuracy))+geom_line()</code></pre>
+                                method = &quot;glmnet&quot;, family = &quot;binomial&quot;, trControl = fitControl)))</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBnbG1uZXRcbkxvYWRpbmcgcmVxdWlyZWQgcGFja2FnZTogZm9yZWFjaFxuZm9yZWFjaDogc2ltcGxlLCBzY2FsYWJsZSBwYXJhbGxlbCBwcm9ncmFtbWluZyBmcm9tIFJldm9sdXRpb24gQW5hbHl0aWNzXG5Vc2UgUmV2b2x1dGlvbiBSIGZvciBzY2FsYWJpbGl0eSwgZmF1bHQgdG9sZXJhbmNlIGFuZCBtb3JlLlxuaHR0cDovL3d3dy5yZXZvbHV0aW9uYW5hbHl0aWNzLmNvbVxuXG5BdHRhY2hpbmcgcGFja2FnZTog46S847ixZm9yZWFjaOOkvOO4slxuXG5UaGUgZm9sbG93aW5nIG9iamVjdHMgYXJlIG1hc2tlZCBmcm9tIOOkvOO4sXBhY2thZ2U6cHVycnLjpLzjuLI6XG5cbiAgICBhY2N1bXVsYXRlLCB3aGVuXG5cbkxvYWRlZCBnbG1uZXQgMi4wLTEwXG4ifQ== -->
+<pre><code>Loading required package: glmnet
+Loading required package: foreach
+foreach: simple, scalable parallel programming from Revolution Analytics
+Use Revolution R for scalability, fault tolerance and more.
+http://www.revolutionanalytics.com
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkJhc2ljIG1hY2hpbmUgbGVhcm5pbmciDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpMb2FkIHVwIHRoZSBwYWNrYWdlcw0KKiB0aWR5dmVyc2UNCiogY2FyZXQNCg0KYGBge3IgcGFja2FnZXN9DQpsaWJyYXJ5KHRpZHl2ZXJzZSkNCmxpYnJhcnkoY2FyZXQpDQpgYGANCg0KTGV0J3MgbG9hZCB1cCBleGFtcGxlIGRhdGEgLSBsb2FkICJtbmVfZGF0YS5jc3YiLg0KDQpVc2UgZ2F0aGVyKCkgYW5kIHNlcGFyYXRlKCkgDQoNCmBgYHtyIGxvYWRfZGF0YX0gDQptbmVfZGF0YSA8LSByZWFkX2NzdignLi4vZGF0YS9tbmVfZGF0YS5jc3YnLCBwcm9ncmVzcyA9IEZBTFNFKSAlPiUNCiAgZ2F0aGVyKGVsZWN0cm9kZSxhbXBsaXR1ZGUsIC1jb25kaXRpb24sIC1lcG9jaCwgLXRpbWUpICU+JQ0KICBzcHJlYWQoZWxlY3Ryb2RlLGFtcGxpdHVkZSkgJT4lDQogIHNlcGFyYXRlKGNvbmRpdGlvbiwgYygibGlnaHQiLCJ0b3VjaCIsInJlcG9ydCIpLCBzZXAgPSAiLyIpDQpgYGANCg0KVGhlIGFpbSBvZiB0aGlzIGV4ZXJjaXNlIGlzIHRvIHVzZSBhIG1hY2hpbmUgbGVhcm5pbmcgbWV0aG9kIHRvIHByb2R1Y2UgYSBsaW5lYXIgY2xhc3NpZmllciB0aGF0IHRoYXQgY2FuIGNsYXNzaWZ5IHRyaWFscyANCg0KDQoqY2FyZXQqIGlzIHRoZSBtYWluIHBhYw0KDQpUbyBkbyBtYWNoaW5lIGxlYXJuaW5nLCB3ZSBuZWVkIHRvIHNwbGl0IG91ciBkYXRhIGludG8gdHJhaW5pbmcgYW5kIHRlc3Qgc2V0cy4gVGhlIGFsZ29yaXRobSB3aWxsIGJ1aWxkIGEgY2xhc3NpZmVyIHVzaW5nIHRoZSB0cmFpbmluZyBkYXRhLCBhbmQgaXRzIHBlcmZvcm1hbmNlIHdpbGwgYmUganVkZ2VkIGJ5IGl0cyBhYmlsaXR5IHRvIGNsYXNzaWZ5IHRyaWFscyBmcm9tIHRoZSB0ZXN0IHNldCBjb3JyZWN0bHkuIA0KDQoNCmBgYHtyfQ0KZml0Q29udHJvbCA8LSB0cmFpbkNvbnRyb2wobWV0aG9kID0gImN2IiwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgIG51bWJlciA9IDUNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICkNCmBgYA0KDQpVc2UgKm5lc3QoKSogDQoNCmBgYHtyfQ0KY2xhc3NpZnlfZGF0YSA8LSBtbmVfZGF0YSAlPiUNCiAgc2VsZWN0KC10b3VjaCwtcmVwb3J0LC1lcG9jaCkgJT4lDQogIG5lc3QoLXRpbWUpICU+JQ0KICBtdXRhdGUoZml0ID0gbWFwKGRhdGEsIH50cmFpbihsaWdodCB+IC4sIGRhdGEgPSAueCwgcHJlUHJvY2VzcyA9ICJzY2FsZSIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIG1ldGhvZCA9ICJnbG1uZXQiLCBmYW1pbHkgPSAiYmlub21pYWwiLCB0ckNvbnRyb2wgPSBmaXRDb250cm9sKSkpDQoNClpaIDwtIGRhdGEuZnJhbWUoQWNjdXJhY3kgPSBtYXAoeiRmaXQsInJlc2FtcGxlIikgJT4lDQogICAgICAgICAgICAgICAgICAgbWFwKCJBY2N1cmFjeSIpICU+JQ0KICAgICAgICAgICAgICAgICAgIG1hcF9kYmwofm1lYW4oLngpKSwgdGltZSA9IHokdGltZSkNClpaJHRpbWUgPC0geiR0aW1lDQoNCmdncGxvdChaWiwgYWVzKHRpbWUsIEFjY3VyYWN5KSkrZ2VvbV9saW5lKCkNCmBgYA==</div>
+Attaching package: 㤼㸱foreach㤼㸲
+
+The following objects are masked from 㤼㸱package:purrr㤼㸲:
+
+    accumulate, when
+
+Loaded glmnet 2.0-10</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuWlogPC0gZGF0YS5mcmFtZShBY2N1cmFjeSA9IG1hcCh6JGZpdCxcInJlc2FtcGxlXCIpICU+JVxuICAgICAgICAgICAgICAgICAgIG1hcChcIkFjY3VyYWN5XCIpICU+JVxuICAgICAgICAgICAgICAgICAgIG1hcF9kYmwofm1lYW4oLngpKSwgdGltZSA9IHokdGltZSlcbmBgYCJ9 -->
+<pre class="r"><code>ZZ &lt;- data.frame(Accuracy = map(z$fit,&quot;resample&quot;) %&gt;%
+                   map(&quot;Accuracy&quot;) %&gt;%
+                   map_dbl(~mean(.x)), time = z$time)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3IgaW4gbWFwKHokZml0LCBcInJlc2FtcGxlXCIpIDogb2JqZWN0ICd6JyBub3QgZm91bmRcbiJ9 -->
+<pre><code>Error in map(z$fit, &quot;resample&quot;) : object 'z' not found</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+</div>
+
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkJhc2ljIG1hY2hpbmUgbGVhcm5pbmciDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQojIyBQYWNrYWdlcyBhbmQgY29tbWFuZHMNCg0KTG9hZCB1cCB0aGUgcGFja2FnZXMNCiogdGlkeXZlcnNlDQoqIGNhcmV0DQoNCmBgYHtyIHBhY2thZ2VzfQ0KbGlicmFyeSh0aWR5dmVyc2UpDQpsaWJyYXJ5KGNhcmV0KQ0KYGBgDQoNCkxldCdzIGxvYWQgdXAgZXhhbXBsZSBkYXRhIC0gbG9hZCAibW5lX2RhdGEuY3N2Ii4NCg0KVXNlIGdhdGhlcigpIGFuZCBzZXBhcmF0ZSgpIA0KDQpgYGB7ciBsb2FkX2RhdGF9IA0KbW5lX2RhdGEgPC0gcmVhZF9jc3YoJy4uL2RhdGEvbW5lX2RhdGEuY3N2JywgcHJvZ3Jlc3MgPSBGQUxTRSkgJT4lDQogIGdhdGhlcihlbGVjdHJvZGUsYW1wbGl0dWRlLCAtY29uZGl0aW9uLCAtZXBvY2gsIC10aW1lKSAlPiUNCiAgc3ByZWFkKGVsZWN0cm9kZSxhbXBsaXR1ZGUpICU+JQ0KICBzZXBhcmF0ZShjb25kaXRpb24sIGMoImxpZ2h0IiwidG91Y2giLCJyZXBvcnQiKSwgc2VwID0gIi8iKQ0KYGBgDQoNClRoZSBhaW0gb2YgdGhpcyBleGVyY2lzZSBpcyB0byB1c2UgYSBtYWNoaW5lIGxlYXJuaW5nIG1ldGhvZCB0byBwcm9kdWNlIGEgbGluZWFyIGNsYXNzaWZpZXIgdGhhdCB0aGF0IGNhbiBjbGFzc2lmeSB0cmlhbHMgDQoNCg0KKmNhcmV0KiBpcyB0aGUgbWFpbiBwYWMNCg0KVG8gZG8gbWFjaGluZSBsZWFybmluZywgd2UgbmVlZCB0byBzcGxpdCBvdXIgZGF0YSBpbnRvIHRyYWluaW5nIGFuZCB0ZXN0IHNldHMuIFRoZSBhbGdvcml0aG0gd2lsbCBidWlsZCBhIGNsYXNzaWZlciB1c2luZyB0aGUgdHJhaW5pbmcgZGF0YSwgYW5kIGl0cyBwZXJmb3JtYW5jZSB3aWxsIGJlIGp1ZGdlZCBieSBpdHMgYWJpbGl0eSB0byBjbGFzc2lmeSB0cmlhbHMgZnJvbSB0aGUgdGVzdCBzZXQgY29ycmVjdGx5LiANCg0KDQpgYGB7cn0NCmZpdENvbnRyb2wgPC0gdHJhaW5Db250cm9sKG1ldGhvZCA9ICJjdiIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICBudW1iZXIgPSA1DQogICAgICAgICAgICAgICAgICAgICAgICAgICApDQpgYGANCg0KVXNlICpuZXN0KCkqIA0KDQpgYGB7cn0NCmNsYXNzaWZ5X2RhdGEgPC0gbW5lX2RhdGEgJT4lDQogIHNlbGVjdCgtdG91Y2gsLXJlcG9ydCwtZXBvY2gpICU+JQ0KICBuZXN0KC10aW1lKSAlPiUNCiAgbXV0YXRlKGZpdCA9IG1hcChkYXRhLCB+dHJhaW4obGlnaHQgfiAuLCBkYXRhID0gLngsIHByZVByb2Nlc3MgPSAic2NhbGUiLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBtZXRob2QgPSAiZ2xtbmV0IiwgZmFtaWx5ID0gImJpbm9taWFsIiwgdHJDb250cm9sID0gZml0Q29udHJvbCkpKQ0KDQpaWiA8LSBkYXRhLmZyYW1lKEFjY3VyYWN5ID0gbWFwKHokZml0LCJyZXNhbXBsZSIpICU+JQ0KICAgICAgICAgICAgICAgICAgIG1hcCgiQWNjdXJhY3kiKSAlPiUNCiAgICAgICAgICAgICAgICAgICBtYXBfZGJsKH5tZWFuKC54KSksIHRpbWUgPSB6JHRpbWUpDQpaWiR0aW1lIDwtIHokdGltZQ0KDQpnZ3Bsb3QoWlosIGFlcyh0aW1lLCBBY2N1cmFjeSkpK2dlb21fbGluZSgpDQpgYGA=</div>
 
 
 

@@ -32,7 +32,7 @@ We'll be using the following new commands
 * map()/map_dbl()
 * lsmeans()
 
-First, load the packages named above *tidyverse* and *afex*, and reload the data frame you saved from the first exercise using load() or read_csv().
+First, load the packages named above, and reload the data frame you saved from the first exercise using *load()* or *read_csv()*.
 
 ```{r load_packages, message = FALSE}
 library(tidyverse)
@@ -83,7 +83,7 @@ Note: part of the purpose of this demonstration is to show that bar plots are *b
 
 We'll also add 95% confidence intervals.
 
-Add bars using stat_summary(geom = "bar").
+Add bars using *stat_summary(geom = "bar")*.
 
 Add errorbars using geom = "pointrange"; remember to change fun.data to plot confidence intervals!
 
@@ -93,7 +93,7 @@ ggplot(obj_pairs, aes(x = Object, y = amplitude)) +
   stat_summary(fun.data = mean_cl_normal, geom = "pointrange")
 ```
 
-We can do much better than this. Add individual data points using geom_point(). Remember: each layer of the plot is drawn consecutively.
+We can do much better than this. Add individual data points using *geom_point()*. Remember: each layer of the plot is drawn consecutively.
 
 ```{r bar_plots_with_dots}
 ggplot(obj_pairs, aes(x = Object, y = amplitude)) +
@@ -111,6 +111,8 @@ ggplot(obj_pairs, aes(x = Object, y = amplitude, colour = factor(Subject))) +
 ```
 
 This looks like Object amplitudes are overall higher, although the distributions substantially overlap. The direction is mostly consistent across subjects, with only one person going in the opposite direction.
+
+### T-tests
 
 Let's go ahead with our paired t-test using the *t.test()* command.
 
@@ -135,7 +137,6 @@ For example, if you stored the output of t-test in a variable called test_result
 test_result$p.value
 test_result[3]
 ```
-
 You query the structure of an R object using *str()* - try now.
 
 ```{r structs}
@@ -152,7 +153,9 @@ tidy(test_result)
 
 Of course, the actual design is a 2 X 3 repeated measures ANOVA. 
 
-There are several ways to run ANOVA in R. We'll use *aov_ez()* from the *afex* package.
+There are several ways to run ANOVA in R. We'll use *aov_ez()* from the **afex** package.
+
+*aov_ez()* simplifies the method of specifying repeated/mixed ANOVAs over base R's *aov()* commands.
 
 ```{r run_aov}
 aov_style <- final_df %>%
@@ -160,14 +163,15 @@ aov_style <- final_df %>%
   group_by(Subject,Object, Frequency) %>%
   summarise(amplitude = mean(amplitude)) 
 
-aov_out <- aov_ez( "Subject", "amplitude", aov_style, within = c("Object", "Frequency"))
+aov_out <- aov_ez(id = "Subject", dv = "amplitude", data = aov_style, within = c("Object", "Frequency"))
 aov_out
 ```
 
-Simple post-hoc tests can be done with *lsmeans()* from the **lsmeans** package.
+### Post-hoc tests
+Simple post-hoc tests can be done with *lsmeans()* *and contrast()* from the **lsmeans** package.
 
 ```{r post_hocs}
-lsmeans(aov_out, c("Object","Frequency"))
+post_hocs <- lsmeans(aov_out, c("Object","Frequency"), contr = "pairwise", adjust = "holm")
+post_hocs
 ```
-
 

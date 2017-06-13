@@ -15,6 +15,12 @@ We can also use stat_summary to calculate and plot confidence intervals or stand
 
 Think about layering. The ribbon should be beneath the lines rather than drawn on top. In addition, since the CIs will overlap, make them transparent using by specifying alpha within the stat_summary call. Experiment with different values of alpha between 0 and 1. Add the following to your ggplot code in the appropriate place.
 
+
+```{r load_packages, message = FALSE}
+library(tidyverse)
+load('../user_data/final_df.Rdata')
+```
+
 ```
 stat_summary(fun.data = mean, geom = "ribbon", alpha = 0.5) 
 ```

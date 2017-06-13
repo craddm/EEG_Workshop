@@ -3,14 +3,54 @@ title: "Power spectral density"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+## Packages and commands
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+* tidyverse
 
-```{r}
-plot(cars)
+```{r packages}
+library(tidyverse)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+```{r} 
+mne_data <- read_csv('../data/mne_data.csv', progress = FALSE) %>%
+  gather(electrode,amplitude, -condition, -epoch, -time) %>%
+  separate(condition, c("light","touch","report"), sep = "/")
+```
+## Frequency analysis
+
+R has several possible commands to perform FFTs. Here we'll use the base R method *spectrum()*. In combination wit 
+
+```{r stats_spectrum}
+spec_psd <- mne_data %>%
+  nest(time, amplitude) %>%
+  mutate(psd = map(data, ~spectrum(.x$amplitude, plot = FALSE)))
+
+spec_psd_two <- spec_psd %>%
+  mutate(freqs = map(.$psd,"freq"), spec = map(.$psd, "spec")) %>%
+  select(-data, -psd) %>%
+  unnest()
+
+spec_psd_two %>%
+  mutate(freqs = freqs*128) %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs, electrode, light) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = freqs, y= log10(spec), colour = electrode)) + 
+  geom_line() + 
+  theme_classic() +
+  facet_wrap(~light)
+
+spec_psd_two %>%
+  mutate(freqs = freqs*128) %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs, electrode, light) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = log(freqs), y= log10(spec), colour = electrode)) + 
+  geom_line() + 
+  theme_classic() +
+  facet_wrap(~light)
+
+```
+
