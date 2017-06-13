@@ -89,6 +89,7 @@ install.packages("brms")
 ```
 
 Some packages are hosted on Github, not CRAN. For example, my EEG package (which is very much in early development and nowhere near ready for prime-time) is hosted on Github. These can be installed using install_github() from the *devtools* package.
+
 ```
 devtools::install_github("craddm/eegUtils")
 ```
