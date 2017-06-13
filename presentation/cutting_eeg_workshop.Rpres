@@ -14,9 +14,6 @@ About R
 Why use R for EEG? 
 ===
 
-
-
-
 RStudio
 ===
 

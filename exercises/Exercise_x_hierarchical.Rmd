@@ -6,38 +6,61 @@ output: html_notebook
 
 Two different approaches to hierarchichal modelling.
 
+Fit a GLM at the subject level
 
-
-Fit a GLM at the individual level
-
-This is a first-level analysis
-
-
+First let's load some data.
 
 ```{r run_lme}
+library(feather)
+testf <- read_feather('../data/S104Extero.feather')
+```
+
+Rearrange the data appropriately.
+
+```{r}
+test2 <- testf %>%
+  filter(time >= -100 & time <= 400) %>%
+  separate(condition, into = c("light", "touch", "reported"), sep = "/") %>% 
+  gather(electrode, amplitude, -time, -touch,-light,-reported, -epoch)
+```
+```{r}
+test2 %>% mutate(baseline = map_dbl(test2 %>%
+                   group_by(electrode) %>%
+                   filter(time >= -100 & time <= 0) %>%
+                   summarise(amplitude = mean(amplitude))))
+
+test2 %>% mutate(baselined = map_dbl(.$amplitude - mean()))
+
+baseline <- test2 %>%
+  group_by(electrode) %>% 
+  filter(time >= -100 & time <= 0) %>%
+  summarise(baseline = mean(amplitude))
+```
+
+```{r}
+ggplot(test2, aes( x = time, y= amplitude, colour = electrode))+stat_summary(geom="line")
+ggplot(test2, aes( x = time, y= amplitude + baseline, colour = electrode))+stat_summary(geom="line")
+```
+
+Nest the data and calculate a linear model on every timepoint at every electrode.
+
+```{r}
+test3 <- nest(test2, -time, -electrode)
+test3
+test4 <- test3 %>%
+  mutate(fit = map(data,~lm(amplitude~ touch*light, data = .)), summ = map(fit,~summary(.)), r2 = map_dbl(summ,"r.squared"))
+
+ggplot(test4, aes(x = time, y = r2, colour = electrode))+geom_line()
+
+
+test5 <- test4 %>%
+  select(time, electrode, fit) %>%
+  mutate(conds = map(fit, ~broom::tidy(lsmeans(.,specs = c("touch", "light")))))
 
 ```
 
 
-
-Take the parameter estimates to the second-level
-
-
-
 ```{r}
-
-```
-
-
-## Linear mixed effect model
-
-The above approach is sometimes called the summary statistic approach, and is an approximation.
-
-You can also model both the subject and 
-
-
-```{r}
-
 
 
 
