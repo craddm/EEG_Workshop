@@ -149,8 +149,6 @@ ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequen
   stat_summary(fun.y = mean, geom = "line", size = 1) + facet_wrap("Object")
 ```
 
-
-
 To round off your plots you may want to add a horizontal line at 0 microvolts and a vertical line at 0 ms. Straight lines can be drawn using geom_vline() and geom_hline(). Check the help!
 
 ```{r final_plot}
@@ -172,7 +170,7 @@ By default, anything you save will go in the present working directory - use *ge
 To save the data frame, either use *save()* or *write_csv()*. Remember to specify the path as well
 
 
-```{r}
+```{r save_files}
 getwd()
 
 plot_out <- ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +
@@ -187,16 +185,4 @@ plot_out <- ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fi
  save(final_df, file = "../user_data/final_df.RData")
 
 ```
-
-
-## EXTRAS 
-
-If you have extra time, try experimenting with your plots. Here are some possibilities:
-
-- Facet on spatial frequency instead of on Object.
-- Use bootstrapped confidence intervals instead of normal confidence intervals (hint: mean_cl_...)
-- Specify different linetypes even with facets
-- Try using facet_grid() to plot each condition's ERP in a separate plot.
-
-Checkout the Workshop Notes for more options!
 

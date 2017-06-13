@@ -13,11 +13,22 @@ It's best to include some measure of variability around your ERPs.
 
 We can also use stat_summary to calculate and plot confidence intervals or standard errors for us. The geom for this is a "ribbon".
 
-Think about layering. The ribbon should be beneath the lines rather than drawn on top. In addition, since the CIs will overlap, make them transparent using by specifying alpha within the stat_summary call. Experiment with different values of alpha between 0 and 1. Add the following to your ggplot code in the appropriate place.
+## Packages and commands
 
+We'll be using
+* tidyverse
+
+Load the data you saved from the last exercise.
+
+```{r load_packages, message = FALSE}
+library(tidyverse)
+load('../user_data/final_df.Rdata')
 ```
-stat_summary(fun.data = mean, geom = "ribbon", alpha = 0.5) 
-```
+
+## Confidence intervals
+
+
+Think about layering. The ribbon should be beneath the lines rather than drawn on top. In addition, since the CIs will overlap, make them transparent using by specifying alpha within the stat_summary call. Experiment with different values of alpha between 0 and 1.
 
 ```{r CIs_plot}
 ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +

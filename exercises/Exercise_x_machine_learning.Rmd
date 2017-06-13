@@ -3,6 +3,8 @@ title: "Basic machine learning"
 output: html_notebook
 ---
 
+## Packages and commands
+
 Load up the packages
 * tidyverse
 * caret

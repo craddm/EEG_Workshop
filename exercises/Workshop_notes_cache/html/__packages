@@ -14,3 +14,6 @@ foreach
 glmnet
 scales
 eegUtils
+bindrcpp
+viridisLite
+viridis

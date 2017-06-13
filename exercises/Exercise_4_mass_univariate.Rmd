@@ -1,0 +1,109 @@
+---
+title: "Mass univariate testing and nested data frames"
+output:    
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+---
+
+Often we want to run a whole series of tests across multiple timepoints, electrodes, frequency bands etc.
+
+Just as in other languages, in R, we can iterate can over vectors and lists, performing the same operation on each item in the list, using *for* loops. But R has its own way of doing this that avoids explicitly specifying *for* loops. In base R, there is the *apply()* family of commands. We'll be using the *map()* family of commands from the **purrr** package, part of the **tidyverse**.
+
+## Packages and commands
+
+You'll need to load the following packages
+* tidyverse
+* broom
+
+We'll be using the following new commands
+* map()/map_df()
+* nest()/unnest()
+
+```{r load_packages, warning = FALSE, message = FALSE}
+library(tidyverse)
+library(broom)
+load('../user_data/final_df.Rdata')
+```
+
+## Nested data frames
+
+*Nest()* from *tidyr* turns several columns of a dataframe into a single column that is a list of dataframes. 
+
+Create a nested data frame for each time point.
+
+```{r Nest_df}
+time_nest <- nest(final_df, -Time)
+head(time_nest)
+```
+
+### Map() and looping
+
+*map()* commands from **purrr** iterate through the elements of lists and vectors, applying functions to each element and returning a specific type of output (e.g. *map()* itself returns a list; *map_dbl()* returns a number in double format; *map_df()* returns a dataframe). We'll add an extra column to our nested data frame containing the output of the t.test() function applied to each element of the *data* list within the time_nest frame.
+
+```{r run_t_tests}
+time_nest <- mutate(time_nest,
+                    stats = map(data, ~t.test(amplitude ~ Object,
+                                              paired = TRUE, data = .x)))
+head(time_nest)
+```
+
+We now have a data frame with the results of the t.test function for each timepoint. Suppose you now want to retrieve the t.test results for a specific timepoint. You can access list elements using double brackets [[]]; you would need to find the right row number for the timepoint you want, and enclose that in the brackets.
+
+```{r query_nest}
+time_nest$stats[[10]]
+```
+
+Alternatively, we can use map to iterate through the list and extract, for example, each p-value.
+
+```{r get_pvals}
+time_nest %>% 
+  mutate(pvals = map_dbl(stats, "p.value")) 
+```
+We can use *tidy()* to convert our statistical test results into a data frame. Then we remove the original data using *select()* and *unnest()* to get back a data frame with a column for each element of the statistical test.
+
+```{r levStats}
+stat_out <- final_df %>%
+  nest(-Time) %>%
+  mutate(stats = (map(data, ~broom::tidy(t.test(amplitude~Object, paired = TRUE, data = .x))))) %>%
+  select(-data) %>%
+  unnest()
+
+stat_out
+```
+
+## Plot statistics and differences
+
+Since the output of t-test includes the difference between means, the test statistic, p-values, and confidence intervals of the differences, we can plot those however we like.
+
+```{r stats_plot, warning = FALSE}
+ggplot()+
+  geom_line(data = stat_out, aes(x = Time, y = estimate)) +
+  geom_ribbon(data = stat_out, aes(ymax = conf.high, ymin = conf.low, x = Time, y = estimate), alpha = 0.3) +
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (", mu, "V)")), colour = "") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = 0, linetype = "dashed")
+```
+
+We can also add indicators of which timepoints are significant, and correct the p-values for multiple comparisons.
+
+```{r plot_sig}
+stat_out$corr.p <- p.adjust(stat_out$p.value, method = "holm")
+stat_out$p.sig <- 0 + (stat_out$p.value < .05)
+stat_out$corr.p.sig <- 0 + (stat_out$corr.p < .05)
+stat_out$p.sig[stat_out$p.sig == 0] <- NA
+stat_out$corr.p.sig[stat_out$corr.p.sig == 0] <- NA
+stat_out
+
+ggplot()+
+  geom_line(data = stat_out, aes(x = Time, y = estimate)) +
+  geom_ribbon(data = stat_out, aes(ymax = conf.high, ymin = conf.low, x = Time, y = estimate), alpha = 0.3) +
+  geom_line(data = stat_out, aes(x = Time, y = p.sig-3), size = 2)+
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (", mu, "V)")), colour = "") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = 0, linetype = "dashed")
+```
+

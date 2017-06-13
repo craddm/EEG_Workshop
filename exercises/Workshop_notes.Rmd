@@ -336,7 +336,7 @@ Alternatively, we can use map to iterate through the list and extract, for examp
 time_nest %>% 
   mutate(pvals = map_dbl(stats, "p.value")) 
 ```
-Alternatively, we can use broom::tidy() to convert our statistical test results into a one-line data frame. Then we remove the original data using select() and unnest() to get back a data frame with a column for each element of the statistical test.
+Alternatively, we can use broom::tidy() to convert our statistical test results into a data frame. Then we remove the original data using select() and unnest() to get back a data frame with a column for each element of the statistical test.
 
 ```{r levStats}
 stat_out <- levCatGA %>%
@@ -344,17 +344,40 @@ stat_out <- levCatGA %>%
   mutate(stats = (map(data, ~broom::tidy(t.test(amplitude~Category, paired = TRUE, data = .x))))) %>%
   select(-data) %>%
   unnest()
+stat_out
 ```
 
+Plot the difference and confidence intervals as calculated by the t-test command.
 
-
-```{r stats_plot}
+```{r stats_plot, warning = FALSE}
 levCat.plot+
-  stat_summary(data = stat_out, fun.data = mean_cl_normal,geom = "ribbon",alpha = 0.2, aes(fill = Category)) +
+  geom_line(data = stat_out, aes(x = Time, y = estimate)) +
+  geom_ribbon(data = stat_out, aes(ymax = conf.high, ymin = conf.low, x = Time, y = estimate), alpha = 0.3) +
+  #stat_summary(data = stat_out, fun.data = mean_cl_normal,geom = "line",alpha = 0.2, aes(x= Time, y = estimate)) +
   stat_summary(fun.y = mean, geom = "line", size = 1, aes(colour = Category)) +
   labs(x = "Time (ms)", y = expression(paste("Amplitude (", mu, "V)")), colour = "") +
   geom_vline(xintercept = 0, linetype = "dashed") +
   geom_hline(yintercept = 0, linetype = "dashed")
+```
+
+Then add a line indicating which time points are significantly different.
+
+```{r add_sig, warning = FALSE, message = FALSE}
+stat_out$corr.p <- p.adjust(stat_out$p.value, method = "holm")
+stat_out$p.sig <- 0 + (stat_out$p.value < .05)
+stat_out$p.sig[stat_out$p.sig == 0] <- NA
+stat_out
+
+levCat.plot+
+  geom_line(data = stat_out, aes(x = Time, y = estimate)) +
+  geom_ribbon(data = stat_out, aes(ymax = conf.high, ymin = conf.low, x = Time, y = estimate), alpha = 0.3) +
+  geom_line(data = stat_out, aes(x = Time, y = p.sig-3), size = 2)+
+  #stat_summary(data = stat_out, fun.data = mean_cl_normal,geom = "line",alpha = 0.2, aes(x= Time, y = estimate)) +
+  stat_summary(fun.y = mean, geom = "line", size = 1, aes(colour = Category)) +
+  labs(x = "Time (ms)", y = expression(paste("Amplitude (", mu, "V)")), colour = "") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = 0, linetype = "dashed")
+
 ```
 
 ## Topography plotting
@@ -609,3 +632,8 @@ data.frame(Accuracy = map(mne_classifier$fit,"resample") %>%
   ggplot(aes(time, Accuracy))+ geom_line() + theme_classic()
 ```
 
+## Github repository
+
+All code from this workshop can be found at https://github.com/craddm/EEG_Workshop
+
+For further details on many aspects of plotting and analysis, check my blog at https://craddm.github.io

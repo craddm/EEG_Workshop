@@ -172,20 +172,80 @@ $(document).ready(function () {
 
 
 <!-- rnb-text-begin -->
-<p>This is an <a href="http://rmarkdown.rstudio.com">R Markdown</a> Notebook. When you execute code within the notebook, the results appear beneath the code.</p>
-<p>Try executing this chunk by clicking the <em>Run</em> button within the chunk or by placing your cursor inside it and pressing <em>Ctrl+Shift+Enter</em>.</p>
+<div id="packages-and-commands" class="section level2">
+<h2>Packages and commands</h2>
+<ul>
+<li>tidyverse</li>
+</ul>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucGxvdChjYXJzKVxuYGBgIn0= -->
-<pre class="r"><code>plot(cars)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5gYGAifQ== -->
+<pre class="r"><code>library(tidyverse)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<p>Add a new chunk by clicking the <em>Insert Chunk</em> button on the toolbar or by pressing <em>Ctrl+Alt+I</em>.</p>
-<p>When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the <em>Preview</em> button or press <em>Ctrl+Shift+K</em> to preview the HTML file).</p>
 <!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubW5lX2RhdGEgPC0gcmVhZF9jc3YoJy4uL2RhdGEvbW5lX2RhdGEuY3N2JywgcHJvZ3Jlc3MgPSBGQUxTRSkgJT4lXG4gIGdhdGhlcihlbGVjdHJvZGUsYW1wbGl0dWRlLCAtY29uZGl0aW9uLCAtZXBvY2gsIC10aW1lKSAlPiVcbiAgc2VwYXJhdGUoY29uZGl0aW9uLCBjKFwibGlnaHRcIixcInRvdWNoXCIsXCJyZXBvcnRcIiksIHNlcCA9IFwiL1wiKVxuYGBgIn0= -->
+<pre class="r"><code>mne_data &lt;- read_csv('../data/mne_data.csv', progress = FALSE) %&gt;%
+  gather(electrode,amplitude, -condition, -epoch, -time) %&gt;%
+  separate(condition, c(&quot;light&quot;,&quot;touch&quot;,&quot;report&quot;), sep = &quot;/&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiUGFyc2VkIHdpdGggY29sdW1uIHNwZWNpZmljYXRpb246XG5jb2xzKFxuICAuZGVmYXVsdCA9IGNvbF9kb3VibGUoKSxcbiAgY29uZGl0aW9uID0gY29sX2NoYXJhY3RlcigpLFxuICBlcG9jaCA9IGNvbF9pbnRlZ2VyKCksXG4gIHRpbWUgPSBjb2xfaW50ZWdlcigpXG4pXG5TZWUgc3BlYyguLi4pIGZvciBmdWxsIGNvbHVtbiBzcGVjaWZpY2F0aW9ucy5cbiJ9 -->
+<pre><code>Parsed with column specification:
+cols(
+  .default = col_double(),
+  condition = col_character(),
+  epoch = col_integer(),
+  time = col_integer()
+)
+See spec(...) for full column specifications.</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="frequency-analysis" class="section level2">
+<h2>Frequency analysis</h2>
+<p>R has several possible commands to perform FFTs. Here we’ll use the base R method <em>spectrum()</em>. In combination wit</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3BlY19wc2QgPC0gbW5lX2RhdGEgJT4lXG4gIG5lc3QodGltZSwgYW1wbGl0dWRlKSAlPiVcbiAgbXV0YXRlKHBzZCA9IG1hcChkYXRhLCB+c3BlY3RydW0oLngkYW1wbGl0dWRlLCBwbG90ID0gRkFMU0UpKSlcblxuc3BlY19wc2RfdHdvIDwtIHNwZWNfcHNkICU+JVxuICBtdXRhdGUoZnJlcXMgPSBtYXAoLiRwc2QsXCJmcmVxXCIpLCBzcGVjID0gbWFwKC4kcHNkLCBcInNwZWNcIikpICU+JVxuICBzZWxlY3QoLWRhdGEsIC1wc2QpICU+JVxuICB1bm5lc3QoKVxuXG5zcGVjX3BzZF90d28gJT4lXG4gIG11dGF0ZShmcmVxcyA9IGZyZXFzKjEyOCkgJT4lXG4gIGZpbHRlcihmcmVxcyA8PSA0MCAmIGZyZXFzID49IDQpICU+JVxuICBncm91cF9ieShmcmVxcywgZWxlY3Ryb2RlLCBsaWdodCkgJT4lXG4gIHN1bW1hcmlzZShzcGVjID0gbWVhbihzcGVjKSkgJT4lXG4gIGdncGxvdChhZXMoeCA9IGZyZXFzLCB5PSBsb2cxMChzcGVjKSwgY29sb3VyID0gZWxlY3Ryb2RlKSkgKyBcbiAgZ2VvbV9saW5lKCkgKyBcbiAgdGhlbWVfY2xhc3NpYygpICtcbiAgZmFjZXRfd3JhcCh+bGlnaHQpXG5cbnNwZWNfcHNkX3R3byAlPiVcbiAgbXV0YXRlKGZyZXFzID0gZnJlcXMqMTI4KSAlPiVcbiAgZmlsdGVyKGZyZXFzIDw9IDQwICYgZnJlcXMgPj0gNCkgJT4lXG4gIGdyb3VwX2J5KGZyZXFzLCBlbGVjdHJvZGUsIGxpZ2h0KSAlPiVcbiAgc3VtbWFyaXNlKHNwZWMgPSBtZWFuKHNwZWMpKSAlPiVcbiAgZ2dwbG90KGFlcyh4ID0gbG9nKGZyZXFzKSwgeT0gbG9nMTAoc3BlYyksIGNvbG91ciA9IGVsZWN0cm9kZSkpICsgXG4gIGdlb21fbGluZSgpICsgXG4gIHRoZW1lX2NsYXNzaWMoKSArXG4gIGZhY2V0X3dyYXAofmxpZ2h0KVxuXG5gYGAifQ== -->
+<pre class="r"><code>spec_psd &lt;- mne_data %&gt;%
+  nest(time, amplitude) %&gt;%
+  mutate(psd = map(data, ~spectrum(.x$amplitude, plot = FALSE)))
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlBvd2VyIHNwZWN0cmFsIGRlbnNpdHkiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpUaGlzIGlzIGFuIFtSIE1hcmtkb3duXShodHRwOi8vcm1hcmtkb3duLnJzdHVkaW8uY29tKSBOb3RlYm9vay4gV2hlbiB5b3UgZXhlY3V0ZSBjb2RlIHdpdGhpbiB0aGUgbm90ZWJvb2ssIHRoZSByZXN1bHRzIGFwcGVhciBiZW5lYXRoIHRoZSBjb2RlLiANCg0KVHJ5IGV4ZWN1dGluZyB0aGlzIGNodW5rIGJ5IGNsaWNraW5nIHRoZSAqUnVuKiBidXR0b24gd2l0aGluIHRoZSBjaHVuayBvciBieSBwbGFjaW5nIHlvdXIgY3Vyc29yIGluc2lkZSBpdCBhbmQgcHJlc3NpbmcgKkN0cmwrU2hpZnQrRW50ZXIqLiANCg0KYGBge3J9DQpwbG90KGNhcnMpDQpgYGANCg0KQWRkIGEgbmV3IGNodW5rIGJ5IGNsaWNraW5nIHRoZSAqSW5zZXJ0IENodW5rKiBidXR0b24gb24gdGhlIHRvb2xiYXIgb3IgYnkgcHJlc3NpbmcgKkN0cmwrQWx0K0kqLg0KDQpXaGVuIHlvdSBzYXZlIHRoZSBub3RlYm9vaywgYW4gSFRNTCBmaWxlIGNvbnRhaW5pbmcgdGhlIGNvZGUgYW5kIG91dHB1dCB3aWxsIGJlIHNhdmVkIGFsb25nc2lkZSBpdCAoY2xpY2sgdGhlICpQcmV2aWV3KiBidXR0b24gb3IgcHJlc3MgKkN0cmwrU2hpZnQrSyogdG8gcHJldmlldyB0aGUgSFRNTCBmaWxlKS4NCg==</div>
+spec_psd_two &lt;- spec_psd %&gt;%
+  mutate(freqs = map(.$psd,&quot;freq&quot;), spec = map(.$psd, &quot;spec&quot;)) %&gt;%
+  select(-data, -psd) %&gt;%
+  unnest()
+
+spec_psd_two %&gt;%
+  mutate(freqs = freqs*128) %&gt;%
+  filter(freqs &lt;= 40 &amp; freqs &gt;= 4) %&gt;%
+  group_by(freqs, electrode, light) %&gt;%
+  summarise(spec = mean(spec)) %&gt;%
+  ggplot(aes(x = freqs, y= log10(spec), colour = electrode)) + 
+  geom_line() + 
+  theme_classic() +
+  facet_wrap(~light)
+
+spec_psd_two %&gt;%
+  mutate(freqs = freqs*128) %&gt;%
+  filter(freqs &lt;= 40 &amp; freqs &gt;= 4) %&gt;%
+  group_by(freqs, electrode, light) %&gt;%
+  summarise(spec = mean(spec)) %&gt;%
+  ggplot(aes(x = log(freqs), y= log10(spec), colour = electrode)) + 
+  geom_line() + 
+  theme_classic() +
+  facet_wrap(~light)
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+</div>
+
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlBvd2VyIHNwZWN0cmFsIGRlbnNpdHkiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQojIyBQYWNrYWdlcyBhbmQgY29tbWFuZHMNCg0KKiB0aWR5dmVyc2UNCg0KYGBge3IgcGFja2FnZXN9DQpsaWJyYXJ5KHRpZHl2ZXJzZSkNCmBgYA0KDQoNCg0KYGBge3J9IA0KbW5lX2RhdGEgPC0gcmVhZF9jc3YoJy4uL2RhdGEvbW5lX2RhdGEuY3N2JywgcHJvZ3Jlc3MgPSBGQUxTRSkgJT4lDQogIGdhdGhlcihlbGVjdHJvZGUsYW1wbGl0dWRlLCAtY29uZGl0aW9uLCAtZXBvY2gsIC10aW1lKSAlPiUNCiAgc2VwYXJhdGUoY29uZGl0aW9uLCBjKCJsaWdodCIsInRvdWNoIiwicmVwb3J0IiksIHNlcCA9ICIvIikNCmBgYA0KIyMgRnJlcXVlbmN5IGFuYWx5c2lzDQoNClIgaGFzIHNldmVyYWwgcG9zc2libGUgY29tbWFuZHMgdG8gcGVyZm9ybSBGRlRzLiBIZXJlIHdlJ2xsIHVzZSB0aGUgYmFzZSBSIG1ldGhvZCAqc3BlY3RydW0oKSouIEluIGNvbWJpbmF0aW9uIHdpdCANCg0KYGBge3Igc3RhdHNfc3BlY3RydW19DQpzcGVjX3BzZCA8LSBtbmVfZGF0YSAlPiUNCiAgbmVzdCh0aW1lLCBhbXBsaXR1ZGUpICU+JQ0KICBtdXRhdGUocHNkID0gbWFwKGRhdGEsIH5zcGVjdHJ1bSgueCRhbXBsaXR1ZGUsIHBsb3QgPSBGQUxTRSkpKQ0KDQpzcGVjX3BzZF90d28gPC0gc3BlY19wc2QgJT4lDQogIG11dGF0ZShmcmVxcyA9IG1hcCguJHBzZCwiZnJlcSIpLCBzcGVjID0gbWFwKC4kcHNkLCAic3BlYyIpKSAlPiUNCiAgc2VsZWN0KC1kYXRhLCAtcHNkKSAlPiUNCiAgdW5uZXN0KCkNCg0Kc3BlY19wc2RfdHdvICU+JQ0KICBtdXRhdGUoZnJlcXMgPSBmcmVxcyoxMjgpICU+JQ0KICBmaWx0ZXIoZnJlcXMgPD0gNDAgJiBmcmVxcyA+PSA0KSAlPiUNCiAgZ3JvdXBfYnkoZnJlcXMsIGVsZWN0cm9kZSwgbGlnaHQpICU+JQ0KICBzdW1tYXJpc2Uoc3BlYyA9IG1lYW4oc3BlYykpICU+JQ0KICBnZ3Bsb3QoYWVzKHggPSBmcmVxcywgeT0gbG9nMTAoc3BlYyksIGNvbG91ciA9IGVsZWN0cm9kZSkpICsgDQogIGdlb21fbGluZSgpICsgDQogIHRoZW1lX2NsYXNzaWMoKSArDQogIGZhY2V0X3dyYXAofmxpZ2h0KQ0KDQpzcGVjX3BzZF90d28gJT4lDQogIG11dGF0ZShmcmVxcyA9IGZyZXFzKjEyOCkgJT4lDQogIGZpbHRlcihmcmVxcyA8PSA0MCAmIGZyZXFzID49IDQpICU+JQ0KICBncm91cF9ieShmcmVxcywgZWxlY3Ryb2RlLCBsaWdodCkgJT4lDQogIHN1bW1hcmlzZShzcGVjID0gbWVhbihzcGVjKSkgJT4lDQogIGdncGxvdChhZXMoeCA9IGxvZyhmcmVxcyksIHk9IGxvZzEwKHNwZWMpLCBjb2xvdXIgPSBlbGVjdHJvZGUpKSArIA0KICBnZW9tX2xpbmUoKSArIA0KICB0aGVtZV9jbGFzc2ljKCkgKw0KICBmYWNldF93cmFwKH5saWdodCkNCg0KYGBgDQoNCg==</div>
 
 
 
