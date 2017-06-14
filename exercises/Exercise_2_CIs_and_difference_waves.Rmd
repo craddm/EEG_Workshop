@@ -27,7 +27,6 @@ load('../user_data/final_df.Rdata')
 
 ## Confidence intervals
 
-
 Think about layering. The ribbon should be beneath the lines rather than drawn on top. In addition, since the CIs will overlap, make them transparent using by specifying alpha within the stat_summary call. Experiment with different values of alpha between 0 and 1.
 
 ```{r CIs_plot}
@@ -39,9 +38,9 @@ ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequen
   geom_hline(yintercept = 0, linetype = "dashed")
 ```
 
-A problem with these intervals is that show between-subject variability. This is a fully within-subject design. Thus these intervals cannot be used to infer differences.
+A problem with these intervals is that they show between-subject variability. This is a fully within-subject design. Thus these intervals cannot be used to infer differences.
 
-What we are really interested in is the variability within-subjects of the difference between conditions, and hence the difference between the ERPs from each condition.
+What we are really interested in is the variability within-subjects of the difference between conditions, and hence the difference between the ERPs from each condition. An easy way to examine this is to look at difference waves
 
 ## Difference waves
 
@@ -82,8 +81,7 @@ Another thing we can do to show variability is add lines for each individual sub
 
 We can add lines using *geom_line()*. 
 
-ggplot draws lines by joining individual datapoints together; to understand that it should group the lines by subject, it needs to told to do so
-
+ggplot draws lines by joining individual datapoints together; to understand that it should group the lines by subject, it needs to told to do so.
 
 ```{r plot_indivs}
 difference_df %>%
@@ -93,3 +91,5 @@ difference_df %>%
   stat_summary(fun.y = mean, geom = "line") +
   facet_grid(Frequency~.)
 ```
+
+Note that plotting lines for each individual can be used on any ERP plot.

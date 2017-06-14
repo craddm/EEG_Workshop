@@ -90,7 +90,7 @@ ggplot()+
 
 We can also add indicators of which timepoints are significant, and correct the p-values for multiple comparisons.
 
-```{r plot_sig}
+```{r plot_sig, warning = FALSE}
 stat_out$corr.p <- p.adjust(stat_out$p.value, method = "holm")
 stat_out$p.sig <- 0 + (stat_out$p.value < .05)
 stat_out$corr.p.sig <- 0 + (stat_out$corr.p < .05)

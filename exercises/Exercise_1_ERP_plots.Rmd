@@ -1,13 +1,18 @@
 ---
-title: "ERP plotting exercise"
-output: html_notebook
+title: "Loading pre-processed ERPs and turning them into plots"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
 ---
-
-## Loading pre-processed ERPs and turning them into plots
 
 In this exercise, you'll practice loading some files that have already been partially processed, manipulating the data to be in a suitable format for plotting, and then actually plotting it. 
 
-### Packages and commands
+## Packages and commands 
+
 You'll need to load the following package: 
 * tidyverse
 
@@ -20,49 +25,53 @@ We'll be using the following commands in the first exercise.
 * gather()
 * separate()
 * ggplot()
+* spread()
+* mutate()
+* pipe %>%
 
 Remember that if you need help on any of the commands, you can either type ?command (e.g. ?gather) in the Console, or in the search box of the Help pane in the bottom right of your RStudio window.
 
 Start by loading the tidyverse package using library().
 
-```{r load_package}
-
+```{r load_package, message = FALSE}
+library(tidyverse)
 ```
 
-### The data
+## The data
 
 The supplied file is data from an object recognition experiment. The design is a 2 X 3 repeated-measures (i.e. fully within-subject) factorial design. The two factors are Object (Object or Non-Object) and Spatial Frequency (broadband, high spatial frequency only, low spatial frequency only). The file contains ERPs for 15 participants from each of the six possible conditions and was produced from Matlab through a combination of EEGLAB and ERPLAB.
 
-Import the data from the pre-prepared file "ObjFreqERPs.csv". Remember to assign it to a variable. You will find the file in the "data" folder. To start with, use the Import Dataset option in the top right pane of your RStudio window, or use read_csv() in the code chunk below.
+Import the data from the pre-prepared file "ObjFreqERPs.csv". Remember to assign it to a variable. You will find the file in the "data" folder. To start with, use the Import Dataset option in the top right pane of your RStudio window.
 
 ```{r load_data}
-
+ObjFreqERPs <- read_csv("../data/ObjFreqERPs.csv")
 ```
 
-Once you have loaded the dataset, it will be held in a dataframe. Check that it has loaded correctly using either head() or glimpse() for a preview, or simply enter the name of the dataframe.
+Once you have loaded the dataset, it will be held in a dataframe. Check that it has loaded correctly using either *head()* or *glimpse()* for a preview, or simply enter the name of the dataframe.
 
-```{r}
-
+```{r inspect_dfs}
+head(ObjFreqERPs)
+glimpse(ObjFreqERPs)
+ObjFreqERPs
 ```
 
-### Convert from wide to long, tidy format
+## Convert from wide to long, tidy format
 
 There are eight columns in the dataframe: one for each of the six conditions, one containing the timepoint for each row, and one containing subject identifiers. 
 
-We want to turn this into a **tidy** dataset - one observation per row, each variable in a column of its own. 
+We want to turn this into a **tidy** dataset - one observation per row, each variable in a column of its own. Note that the dependent variable here is the amplitude at each timepoint; Object and Spatial Frequency are independent variables.
 
-The dependent variable here is the amplitude at each timepoint. Object and Spatial Frequency are independent variables.
-
-*gather()* pulls together multiple columns and turns them into key-value pairs (i.e. two columns). The key will be the name of the column from which the variable is drawn, the value column the values which were previously spread across other columns. 
-
-Use *gather()* to create two new columns - "condition" and "amplitude", keeping the columns "Time" and "Subject". To keep columns, add them after the key-value pair but with a minus (-) symbol.
+gather() is the *tidyverse* way of bringing a wide format dataset into long format. It pulls together multiple columns and turns them into key-value pairs (i.e. two columns). The key will be the name of the column from which the variable is drawn, the value column the values which were previously spread across other columns.
 
 Check the syntax with ?gather
 
-Be sure to inspect the new dataframe using *head()* or *glimpse()*.
+Use gather() to create two new columns - "condition" and "amplitude", keeping the columns "Time" and "Subject". To keep columns, add them after the key-value pair but with a minus (-) symbol.
+
+Be sure to inspect the new dataframe using head() or glimpse().
 
 ```{r gather_to_long}
 final_df <- gather(ObjFreqERPs, condition, amplitude, -Subject, -Time)
+head(final_df)
 ```
 
 The data is not yet *tidy*. Remember that this is a 2 x 3 design. The "condition" column currently combines two factors into one, which is not much use if we want to run, for example, an ANOVA - it will be treated as a single factor with six levels. 
@@ -71,19 +80,17 @@ We need to split "condition" into two variable columns, one for the Object facto
 
 The command separate() can do this for us - check ?separate
 
-For this task, you only need the first four arguments - separate(data, col, into, sep). Some explanation of terms from the help: "Bare column name" means a column name with no quote marks (e.g. condition rather than "condition").  To create a character vector with multiple entries, use the command c(), and enclose your entries in quote marks (e.g. c("colname1", "colname2)). In this case, there is a clear separator between the two factors - "/". Give the new columns meaningful names.
+For this task, you only need the first four arguments - separate(data, col, into, sep). Some explanation of terms from the help: "Bare column name" means a column name with no quote marks (e.g. condition rather than "condition").  To create a character vector with multiple entries, use the command c(), and enclose your entries in quote marks (e.g. c("colname1", "colname2)). In this case, there is a clear separator between the two factors - "/". Give the new columns the names "Object" and "Frequency".
 
 
 ```{r}
-final_df <- separate(final_df, condition, into = c("Object", "Spatial Frequency"), sep = "/")
+final_df <- separate(final_df, condition, into = c("Object", "Frequency"), sep = "/")
 head(final_df)
 ```
 
 Now you should have a dataframe with five columns - Time, Subject, Object, Frequency, and amplitude. It's now ready for use in plotting and statistics.
 
-## How to plot using ggplot2
-
-### Create a basic ERP plot
+## Create a basic ERP plot using ggplot2
 
 Plots are created by adding layers to a ggplot object. There is a very wide variety of different shapes (or "geoms") and summary statistics that can be plotted.
 
@@ -92,7 +99,7 @@ A basic plot object is created using ggplot() *(NOT GGPLOT2)*. Remember - check 
 Remember it is best when specifying aesthetics to specify which variable is mapped to which property. For example, when specifying the variable that should go on the x axis, specify it as aes(x = variable). 
 
 
-#### Adding a statistical summary
+### Adding a statistical summary
 
 Use stat_summary() to calculate summary of **y** at each level of **x**.
 
@@ -113,7 +120,7 @@ ggplot(final_df, aes(x = Time, y = amplitude)) +
 ```
 
 
-#### Grouping lines by factors 
+### Grouping lines by factors 
 
 We'd like this to show separate lines for the various conditions. For example, the lines can simply be grouped together with group = var; they can be different colours (colour = var); or they can use different linetypes (e.g. dashed versus solid; linetype = var). 
 
@@ -124,85 +131,58 @@ ggplot(final_df, aes(x = Time, y = amplitude, linetype = Object)) +
   stat_summary(fun.y = mean, geom = "line")
 ```
 
-Of course, this is a 2 x 3 design. Modify aes() to show `Spatial Frequency` in different colours. Change the thickness of the lines by specifying size = 1 within the stat_summary call. 
+Of course, this is a 2 x 3 design. Modify aes() to show Frequency in different colours. Change the thickness of the lines by specifying size = 1 within the stat_summary call. 
 
 ```{r objXfreq_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, linetype = Object)) +
+ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, linetype = Object)) +
   stat_summary(fun.y = mean, geom = "line", size = 1)
 ```
 
-#### Facetting 
+### Facetting 
 
 With six lines on the plot, it's getting a little hard to see clearly. 
 
 Split this into two plots using facet_wrap("variable name").
 
 ```{r facet_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill = `Spatial Frequency`)) + 
+ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) + 
   stat_summary(fun.y = mean, geom = "line", size = 1) + facet_wrap("Object")
 ```
 
+To round off your plots you may want to add a horizontal line at 0 microvolts and a vertical line at 0 ms. Straight lines can be drawn using geom_vline() and geom_hline(). Check the help!
 
-#### Adding confidence intervals 
-
-We can also use stat_summary to calculate and plot confidence intervals or standard errors.
-
-Think about layering. The ribbon should be beneath the lines rather than drawn on top. In addition, since the CIs will overlap, make them transparent using by specifying alpha within the stat_summary call. Experiment with different values of alpha between 0 and 1. Add the following to your ggplot code in the appropriate place.
-
-```
-stat_summary(fun.data = mean, geom = "ribbon", alpha = 0.5) 
-```
-
-```{r CIs_plot}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill = `Spatial Frequency`)) +
-  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2) +
+```{r final_plot}
+ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +
   stat_summary(fun.y = mean, geom = "line", size = 1) +
-  facet_wrap("Object")
-```
-
-To round off your plots you may want to add a horizontal line at 0 microvolts and a vertical line at 0 ms. Straight lines can be drawn using geom_vline() and geom_hline(). check the help!
-
-```{r}
-ggplot(final_df, aes(x = Time, y = amplitude, colour = `Spatial Frequency`, fill = `Spatial Frequency`)) +
-  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2, colour = NA) +
-  stat_summary(fun.y = mean, geom = "line") +
   facet_wrap("Object") +
   geom_vline(xintercept = 0, linetype = "dashed") + 
   geom_hline(yintercept = 0, linetype = "dashed")
 ```
 
-### Difference waves
+### Finishing up
 
-A very useful tool when plotting ERPs is the difference wave. It's simpler to subtract two columns from each other than it is to subtract groups of rows from a single column. Thus, we need to make our data wide again.
+Save your final data frame and at least one of your plots.
 
-We can use spread() for this. It is the opposite of gather() and has the same syntax.
+To save a plot, the simplest thing to do is assign your plot to an object, and then save that object using *ggsave()*. Create a new directory called something like "user". 
+
+By default, anything you save will go in the present working directory - use *getwd()* to see what directory that is.
+
+To save the data frame, either use *save()* or *write_csv()*. Remember to specify the path as well
+
+
+```{r save_files}
+getwd()
+
+plot_out <- ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2, colour = NA) +
+  stat_summary(fun.y = mean, geom = "line", size = 1) +
+  facet_wrap("Object") +
+  geom_vline(xintercept = 0, linetype = "dashed") + 
+  geom_hline(yintercept = 0, linetype = "dashed")
+
+# ggsave("plot_out.png",plot_out)
+
+ save(final_df, file = "../user_data/final_df.RData")
 
 ```
-final_df <- spread(final_df, Object, amplitude) %>%
-  mutate(difference = Object - `Non-Object`)
 
-head(final_df)
-```
-
-```{r spreading_data}
-final_df <- spread(final_df, Object, amplitude) %>%
-  mutate(difference = Object - `Non-Object`)
-
-head(final_df)
-```
-
-## EXTRAS 
-
-If you have extra time, try experimenting with your plots. Here are some possibilities:
-
-- Facet on spatial frequency instead of on Object.
-- Use bootstrapped confidence intervals instead of normal confidence intervals (hint: mean_cl_...)
-- Specify different linetypes even with facets
-
-
-
-
-```{r}
-final_df %>%
-  spread(Object,amplitude)
-```

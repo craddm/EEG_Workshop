@@ -1,0 +1,92 @@
+---
+title: "Power spectral density"
+output:    
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+---
+
+Now that we've got used to nesting data, let's try another 
+
+## Packages and commands
+We'll be using:
+* tidyverse
+
+New comands will be:
+* separate
+* spectrum
+
+First, load the tidyverse.
+
+```{r packages}
+library(tidyverse)
+```
+
+We'll be using different example data for this exercise. Load **mne_data.csv** from the **data** folder using *read_CSV()*. Examine the data frame using *head()*.
+
+```{r load_data} 
+mne_data <- read_csv('../data/mne_data.csv', progress = FALSE) 
+head(mne_data)
+```
+
+This data is in wide format. We need to it be in long format. Use *gather()* to convert it. Remember that we want to keep the condition, epoch, and time variables as they are. Also of note is the condition variable. We need to split it into several different columns. Use *separate()* from **dplyr**.
+
+```{r change_to_long}
+mne_data <- mne_data %>%
+  gather(electrode, amplitude, -condition, -epoch, -time) %>%
+  separate(condition, c("light","touch","report"), sep = "/")
+```
+
+## Frequency analysis
+
+R has several possible commands to perform FFTs. Here we'll use the base R method *spectrum()*. 
+
+We want to calculate the power spectrum for every trial, for every electrode, then average over them. We'll *nest()* time and amplitude within the data frame first.
+
+```{r stats_spectrum}
+spec_psd <- mne_data %>%
+  nest(time, amplitude) 
+
+spec_psd
+```
+
+Now that it's nested, we'll add another column and use *map()* to calculate the power spectrum for eacah trial and electrode.
+
+```{r calc_specs}
+spec_psd <- mutate(spec_psd, psd = map(data, ~spectrum(.x$amplitude, plot = FALSE)))
+
+spec_psd_two <- spec_psd %>%
+  mutate(freqs = map(.$psd,"freq"), spec = map(.$psd, "spec")) %>%
+  select(-data, -psd) %>%
+  unnest()
+```
+
+
+Now, with piping we will take average across all epochs for each electrode and plot them in a single group of code. We'll first do a semi-log, then a log-log plot.
+
+```{r spec_plots}
+spec_psd_two %>%
+  mutate(freqs = freqs*128) %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs, electrode, light) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = freqs, y= log10(spec), colour = electrode)) + 
+  geom_line() + 
+  theme_classic() +
+  facet_wrap(~light)
+
+spec_psd_two %>%
+  mutate(freqs = freqs*128) %>%
+  filter(freqs <= 40 & freqs >= 4) %>%
+  group_by(freqs, electrode, light) %>%
+  summarise(spec = mean(spec)) %>%
+  ggplot(aes(x = log(freqs), y= log10(spec), colour = electrode)) + 
+  geom_line() + 
+  theme_classic() +
+  facet_wrap(~light)
+
+```
+
