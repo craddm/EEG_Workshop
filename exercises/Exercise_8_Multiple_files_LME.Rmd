@@ -1,0 +1,155 @@
+---
+title: "Running Linear mixed-effects models"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+---
+
+As a final step, we'll load multiple files and run a linear mixed effects model 
+
+## Packages and commands
+
+Load the following packages:
+* tidyverse
+* lmerTest
+* feather
+
+New commands we'll be using are:
+* list.files()
+* lmer()
+* map_df()
+
+```{r load_packages, message= FALSE}
+library(feather)
+library(tidyverse)
+library(lmerTest)
+library(eegUtils)
+library(sjPlot)
+options(contrasts = c("contr.sum","contr.poly"))
+```
+
+## Loading multiple files
+
+In **../data** folder you'll find a number of *.feather* files. Since these all have the same structure and are the same filetype, we can load them all that once and combine them into a single data frame using *map_df()*. *list.files()* can be used to generate a list of files which meet a particular pattern within a folder. Here we'll load all the *.feather files.
+
+
+```{r load_all, warning = FALSE}
+all_subs <- map_df(list.files('../data/','*.feather', full.names = TRUE),
+                   ~read_feather(.x),
+                   .id = "Subject")
+head(all_subs)
+```
+
+Let's make the data a little more manageable and convert it to long format. Use *filter()* to choose data from -100 to 400 ms; *separate()* to split up the condition column; and *gather()* to convert the data to long format fully. 
+
+```{r long_format}
+all_subs <- all_subs %>%
+  filter(time >= -100 & time <= 400) %>%
+  separate(condition, into = c("light", "touch", "reported"), sep = "/") %>%
+  gather(electrode, amplitude, Fp1:O2)
+
+head(all_subs)
+```
+
+## Summarise and plot grand mean ERPs
+
+It is extremely simple to produce grand means; we'll do this in a single chain of piped commands, since we do not want to keep teh grand averaged data - for LMEs, we need single trials.
+
+```{r grand_means}
+all_subs %>% 
+  group_by(Subject, electrode, time) %>%
+  summarise(amplitude = mean(amplitude)) %>%
+  ggplot(aes(x = time, y = amplitude, colour = electrode)) +
+  stat_summary(geom = "line") +
+  theme_classic()
+```
+
+## Baseline correction
+
+The data here needs to be baseline corrected. We'll calculate the baseline for each subject and electrode and use *left_join()* to add it to the original data frame.
+
+```{r baseline}
+all_subs <- left_join(all_subs, all_subs %>%
+  filter(time >= -100 & time <= 0) %>%
+  group_by(Subject, electrode) %>% 
+  summarise(baseline = mean(amplitude)),
+  by = c("Subject","electrode")) 
+
+head(all_subs)
+all_subs$amplitude <- all_subs$amplitude - all_subs$baseline
+```
+
+Now we'll plot the basline corrected data.
+
+```{r plot_baselined}
+all_subs %>% 
+  group_by(Subject, electrode, time) %>%
+  summarise(amplitude = mean(amplitude)) %>%
+  ggplot(aes(x = time, y = amplitude, colour = electrode)) +
+  stat_summary(geom = "line") +
+  theme_classic()
+```
+
+## Select data for LME
+
+LMEs can take quite a while to run (amongst other things...). For our workshop purposes, let's choose a specific time window to average over and a single electrode of interest. We'll pick 140 to 170 ms.
+
+```{r cut_down}
+mini_data <- all_subs %>%
+  filter(time >= 140 & time <= 170) %>%
+  group_by(Subject,touch,light,epoch, electrode) %>%
+  summarise(amplitude = mean(amplitude)) %>%
+  ungroup()
+```
+
+Let's use *topoplot()* from **eegUtils**. 
+
+```{r topoplot, message = FALSE}
+mini_data %>%
+  group_by(Subject,electrode) %>%
+  summarise(amplitude = mean(amplitude)) %>%
+  topoplot()
+```
+
+Looks like we have something going on at occipital electrodes. Let's focus in on one electrode, PO4.
+
+## Run an LME
+
+```{r run_lme}
+lme_out <- mini_data %>%
+  filter(electrode == "PO4") %>%
+  group_by(Subject, light, touch, epoch) %>%
+  summarise(amplitude = mean(amplitude)) %>%
+  ungroup() %>%
+  lmer(amplitude ~ touch*light + (1 + touch*light|Subject), data = .)
+```
+
+We can use summary to have a look at the results.
+
+```{r lme_output}
+summary(lme_out)
+```
+
+## Plot fixed and random effects
+
+```{r sjplots, message = FALSE}
+sjp.lmer(lme_out, type = "fe", p.kr = FALSE)
+sjp.lmer(lme_out, type = "re", sort.est = "(Intercept)")
+```
+
+We can try to run a full LME on every timepoint. Let's see what happens.
+
+```{r warnings}
+mo_problems <- all_subs %>%
+  filter(electrode == "PO4") %>%
+  ungroup() %>%
+  nest(-time) %>%
+  mutate(lme_out = map(data, ~lmer(amplitude~touch*light + (1 + touch*light |Subject), data = .)))
+```
+
+You will note a lot of error messages. 
+

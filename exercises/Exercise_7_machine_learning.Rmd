@@ -1,0 +1,104 @@
+---
+title: "Basic machine learning"
+output:    
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+---
+
+The main machine learning package in R is **caret**, which provides an interface to huge variety of different methods for classification and regression analysis.
+
+## Packages and commands
+
+Load up the packages
+* tidyverse
+* caret
+
+New commands:
+* spread()
+* train()
+* trainControl()
+
+```{r load_packages, message = FALSE}
+library(tidyverse)
+library(caret)
+```
+
+## Load and prepare data
+
+Let's load up example data - load **mne_data.csv**.
+
+Do the usual *gather()* and *separate()* to bring the data to long format.
+
+```{r load_data, message = FALSE} 
+mne_data <- read_csv('../data/mne_data.csv', progress = FALSE) %>%
+  gather(electrode,amplitude, -condition, -epoch, -time) %>%
+  separate(condition, c("light","touch","report"), sep = "/")
+
+head(mne_data)
+```
+
+
+## Set up caret modelling
+
+We'll be using **caret** to classify trials as belonging to either the light or the no light condition. 
+
+To do machine learning, we need to split our data into training and test sets. The algorithm will build a classifer using the training data, and its performance will be judged by its ability to classify trials from the test set correctly. In addition, we'll train classifiers at each timepoint to work out when the classifier is able to distinguish between trial types.
+
+Fortunately, caret can handle a lot of this for us using its *train()* function.
+
+We need to first configure the training method using the *trainControl()* function. This tells **caret** to use techniques such as k-fold cross-validation. 
+
+```{r train_control}
+fitControl <- trainControl(method = "cv",
+                           number = 5
+                           )
+```
+
+Since we want to fit classifiers at each timepoint, the simplest thing for us to do is *nest()* our dataset and use *map()* to iterate through each point.
+
+Note that here an additional step is necessary. We'll be using **glmnet** to actually train the classifiers. **glmnet** needs the data to be in *wide* format rather than *long*. We'll use spread to make the data wide again. We also need to throw out columns which we do not want it to use as predictors so that we can use a shortcut when specifying the formula for the model.
+
+Note - this will take a minute or two.
+
+```{r run_training}
+classify_data <- mne_data %>%
+  spread(electrode,amplitude) %>%
+  select(-touch,-report,-epoch) %>%
+  nest(-time) %>%
+  mutate(fit = map(data, ~train(light ~ ., data = .x, preProcess = "scale",
+                                method = "glmnet", family = "binomial", trControl = fitControl)))
+head(classify_data)
+```
+
+## Extract and plot results
+
+Let's take a look at the result of one of the classifiers. We'll use a trick to find the nearest timepoint to 211 ms using filter().
+
+```{r example_results}
+classify_data %>%
+  filter(abs(time-211) == min(abs(time - 211))) %>%
+  .$fit
+```
+
+The results for each fold are in *resample*.
+
+```{r get_resample}
+classify_data$fit[[50]]$resample
+
+```
+
+Finally, let's plot the performance of the classifier at each timepoint, extracting the accuracies for each fold and averaging across them.
+
+```{r make_plot}
+
+classify_data <- mutate(classify_data, Accuracy = map(fit,"resample") %>% 
+                          map("Accuracy") %>%
+                          map_dbl(~mean(.x)))
+
+
+ggplot(classify_data, aes(time, Accuracy))+geom_line()+theme_classic()
+```

@@ -1,0 +1,83 @@
+---
+title: "Fitting and plotting individual GLMs"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+---
+
+One way of modelling stingle trial data is to fit individual GLMs.
+
+## Packages and commands
+
+packages:
+* feather
+* tidyverse
+
+New commands:
+* read_feather()
+
+## Loading Feather files
+
+First, let's load some data. We'll be loading some data from a *feather* file using the **feather** package. *feather* is a lightweight binary format; the data has been pre-processed using MNE-Python and exported from there.
+
+Choose one of the feather files from the data directory, and load it using *read_feather()*
+
+```{r load_packages, message = FALSE}
+library(feather)
+library(tidyverse)
+feather_dat <- read_feather('../data/S104Extero.feather')
+head(feather_dat)
+```
+
+Rearrange the data  to long format. Trim it down to the time range -100 to 400 ms using *filter()*, use *separate()* to split the condition column into multiple columns. Use *gather()* bring the individual electrode columns into a key-value pair.
+
+```{r reorganize_data}
+feather_dat <- feather_dat %>%
+  filter(time >= -100 & time <= 400) %>%
+  separate(condition, into = c("light", "touch", "reported"), sep = "/") %>% 
+  gather(electrode, amplitude, -time, -touch,-light,-reported, -epoch)
+head(feather_dat)
+```
+
+## Plot ERPS
+
+Now plot the ERPs from all electrodes and conditions.
+
+```{r plot_ERPs}
+ggplot(feather_dat, aes( x = time, y= amplitude, colour = electrode)) +
+  stat_summary(geom="line") +
+  theme_classic()
+```
+
+## Nest and run GLM
+
+Nest the data and calculate a linear model on every timepoint at every electrode.
+
+```{r run_glms}
+feather_dat <- nest(feather_dat, -time, -electrode)
+feather_dat <- feather_dat %>%
+  mutate(fit = map(data, ~lm(amplitude ~ touch*light, data = .)))
+
+head(feather_dat)
+```
+
+## Plot R-Squared
+
+We can extract the summary of the model, and the R-Squared from that model.
+
+```{r get_r2}
+feather_dat <- feather_dat %>%
+  mutate(summ = map(fit,~summary(.)),
+         r2 = map_dbl(summ,"r.squared"))
+
+ggplot(feather_dat, aes(x = time, y = r2, colour = electrode)) +
+  geom_line() +
+  theme_classic()
+
+```
+
+
