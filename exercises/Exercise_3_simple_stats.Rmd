@@ -38,7 +38,7 @@ First, load the packages named above, and reload the data frame you saved from t
 library(tidyverse)
 library(afex)
 library(broom)
-load('../user_data/final_df.RData')
+# load('../user_data/final_df.RData')
 theme_set(theme_classic())
 ```
 
@@ -62,7 +62,7 @@ Assign this to a separate data frame, as we want to keep the original for later 
 
 ```{r new_df}
 obj_pairs <- final_df %>%
-  filter(Time >= 85 & Time <= 135) %>%
+ filter(Time >= 85 & Time <= 135) %>%
   group_by(Subject, Object) %>%
   summarise(amplitude = mean(amplitude))
 
@@ -125,7 +125,7 @@ dv ~ iv
 In R, ~ used in a formula usually means "modelled by". In this case we want to model amplitude by Object. Make sure you  ```paired = TRUE``` to indicate that this is a **paired**, dependent t-test. Allocate the result to a variable using *<-*
 
 ```{r single_t_test}
-test_result <- t.test(amplitude~Object, data = obj_pairs, paired = TRUE)
+test_result <- t.test(amplitude ~ Object, data = obj_pairs, paired = TRUE)
 test_result
 ```
 
@@ -141,6 +141,12 @@ You query the structure of an R object using *str()* - try now.
 
 ```{r structs}
 str(test_result)
+```
+
+```{r}
+
+test_result$p.value
+
 ```
 
 Helpfully, the output of many stats objects can be tidied up and turned into a dataframe using *tidy()* from the *broom* package, which makes them easier to use for subsequent plotting (see next section). Try that now (no need to assign the output to a new variable).

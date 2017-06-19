@@ -36,8 +36,12 @@ load('../user_data/final_df.Rdata')
 Create a nested data frame for each time point.
 
 ```{r Nest_df}
+final_df
+
 time_nest <- nest(final_df, -Time)
 head(time_nest)
+
+time_nest
 ```
 
 ### Map() and looping
@@ -54,7 +58,7 @@ head(time_nest)
 We now have a data frame with the results of the t.test function for each timepoint. Suppose you now want to retrieve the t.test results for a specific timepoint. You can access list elements using double brackets [[]]; you would need to find the right row number for the timepoint you want, and enclose that in the brackets.
 
 ```{r query_nest}
-time_nest$stats[[10]]
+time_nest$stats[[1]]
 ```
 
 Alternatively, we can use map to iterate through the list and extract, for example, each p-value.

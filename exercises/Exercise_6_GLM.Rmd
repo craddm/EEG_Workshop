@@ -65,6 +65,11 @@ feather_dat <- feather_dat %>%
 head(feather_dat)
 ```
 
+
+
+```{r}
+summary(feather_dat$fit[[5]])
+```
 ## Plot R-Squared
 
 We can extract the summary of the model, and the R-Squared from that model.

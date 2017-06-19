@@ -38,6 +38,9 @@ This data is in wide format. We need to it be in long format. Use *gather()* to 
 mne_data <- mne_data %>%
   gather(electrode, amplitude, -condition, -epoch, -time) %>%
   separate(condition, c("light","touch","report"), sep = "/")
+
+mne_data
+
 ```
 
 ## Frequency analysis
@@ -58,10 +61,14 @@ Now that it's nested, we'll add another column and use *map()* to calculate the 
 ```{r calc_specs}
 spec_psd <- mutate(spec_psd, psd = map(data, ~spectrum(.x$amplitude, plot = FALSE)))
 
+spec_psd$psd[[5]]
+
 spec_psd_two <- spec_psd %>%
   mutate(freqs = map(.$psd,"freq"), spec = map(.$psd, "spec")) %>%
   select(-data, -psd) %>%
   unnest()
+
+spec_psd_two
 ```
 
 Now, with piping we will take the average across all epochs for each electrode and plot them in a single group of code. We'll first do a semi-log, then a log-log plot.
@@ -70,11 +77,12 @@ Now, with piping we will take the average across all epochs for each electrode a
 spec_psd_two %>%
   mutate(freqs = freqs*128) %>%
   filter(freqs <= 40 & freqs >= 4) %>%
-  group_by(freqs, electrode) %>%
+  group_by(freqs, electrode, light) %>%
   summarise(spec = mean(spec)) %>%
   ggplot(aes(x = freqs, y= log10(spec), colour = electrode)) + 
   geom_line() + 
-  theme_classic()
+  theme_classic() +
+  facet_wrap(~light)
 
 spec_psd_two %>%
   mutate(freqs = freqs*128) %>%

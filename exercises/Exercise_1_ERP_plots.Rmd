@@ -34,6 +34,7 @@ Remember that if you need help on any of the commands, you can either type ?comm
 Start by loading the tidyverse package using library().
 
 ```{r load_package, message = FALSE}
+
 library(tidyverse)
 ```
 
@@ -83,7 +84,7 @@ The command separate() can do this for us - check ?separate
 For this task, you only need the first four arguments - separate(data, col, into, sep). Some explanation of terms from the help: "Bare column name" means a column name with no quote marks (e.g. condition rather than "condition").  To create a character vector with multiple entries, use the command c(), and enclose your entries in quote marks (e.g. c("colname1", "colname2)). In this case, there is a clear separator between the two factors - "/". Give the new columns the names "Object" and "Frequency".
 
 
-```{r}
+```{r separate_data}
 final_df <- separate(final_df, condition, into = c("Object", "Frequency"), sep = "/")
 head(final_df)
 ```
@@ -146,7 +147,7 @@ Split this into two plots using facet_wrap("variable name").
 
 ```{r facet_plot}
 ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) + 
-  stat_summary(fun.y = mean, geom = "line", size = 1) + facet_wrap("Object")
+  stat_summary(fun.y = mean, geom = "line", size = 1) + facet_wrap("Frequency")
 ```
 
 To round off your plots you may want to add a horizontal line at 0 microvolts and a vertical line at 0 ms. Straight lines can be drawn using geom_vline() and geom_hline(). Check the help!
@@ -171,7 +172,6 @@ To save the data frame, either use *save()* or *write_csv()*. Remember to specif
 
 
 ```{r save_files}
-getwd()
 
 plot_out <- ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fill = Frequency)) +
   stat_summary(fun.data = mean_cl_normal, geom = "ribbon", alpha = 0.2, colour = NA) +
@@ -180,7 +180,7 @@ plot_out <- ggplot(final_df, aes(x = Time, y = amplitude, colour = Frequency, fi
   geom_vline(xintercept = 0, linetype = "dashed") + 
   geom_hline(yintercept = 0, linetype = "dashed")
 
-# ggsave("plot_out.png",plot_out)
+ ggsave("plot_out.png",plot_out)
 
  save(final_df, file = "../user_data/final_df.RData")
 
